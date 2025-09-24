@@ -33,4 +33,4 @@ echo "Number of Cores/Task Allocated = $SLURM_CPUS_PER_TASK"
 # ________________________________________________________________________
 # Launch the test
 
-python run.py -g thrust_gpu --compiler="hipcc" --device="amd_mi250" --cmake-args="-DTHRUST_ITERATOR_TYPE=counting" --backend="thrust_unified"
+python run.py -g kokkos_gpu --compiler="hipcc" --device="amd_mi250"

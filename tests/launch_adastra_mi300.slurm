@@ -47,4 +47,4 @@ export LD_LIBRARY_PATH=$KOKKOS_HOME/lib:$LD_LIBRARY_PATH
 # ________________________________________________________________________
 # Launch the test
 
-python run.py -g thrust_gpu --compiler="hipcc" --device="amd_mi300" --cmake-args="-DTHRUST_ITERATOR_TYPE=counting" --backend="thrust_unified"
+python run.py -g kokkos_gpu --compiler="hipcc" --device="amd_mi300"

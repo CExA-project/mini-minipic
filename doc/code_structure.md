@@ -39,8 +39,12 @@ Each file provides either a set of functions, a namespace or a data container (c
 
 ## Macros
 
-| Macros                 | Description                                            |
-|------------------------|--------------------------------------------------------|
-| `__MINIPIC_SIMD__`     | Activate specific SIMD pragmas                         |
-| `__MINIPIC_OMP__`      | Activate specific OPENMP operators                     |
-| `__MINIPIC_KOKKOS__`   | Activate specific KOKKOS operators                     |
+| Macros                   | Description                                                            |
+|--------------------------|------------------------------------------------------------------------|
+| `__MINIPIC_SIMD__`       | Activate specific SIMD pragmas                                         |
+| `__MINIPIC_OMP__`        | Activate specific OPENMP operators                                     |
+| `__MINIPIC_KOKKOS__`     | Activate specific KOKKOS operators                                     |
+| `__MINIPIC_KOKKOS_SCATTERVIEW__` | Activate specific KOKKOS projection types: scatter_view.       |
+| `__MINIPIC_KOKKOS_ATOMICVIEW__` | Activate specific KOKKOS projection types: atomic_view.         |
+| `__MINIPIC_KOKKOS_COMMON__` | Macro for code common to all Kokkos implementations.                |
+| `__MINIPIC_KOKKOS_DUALVIEW_COMMON__ ` | Macro for code common to all Kokkos implementations using dual_view. |

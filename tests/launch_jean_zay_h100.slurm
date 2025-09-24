@@ -32,8 +32,5 @@ cd $SLURM_SUBMIT_DIR
 # ________________________________________________________________________
 # Launch the test
 
-#python run.py -g kokkos_gpu --device="nvidia_h100"
-#python run.py -g thrust_gpu --device="nvidia_h100" --cmake-args="-DTHRUST_ITERATOR_TYPE=counting"
-#python run.py -g thrust_gpu --device="nvidia_h100" --cmake-args="-DTHRUST_ITERATOR_TYPE=zip"
-python run.py -g thrust_gpu --device="nvidia_h100" --cmake-args="-DTHRUST_ITERATOR_TYPE=counting" --backend="thrust_unified"
+python run.py -g kokkos_gpu --device="nvidia_h100"
 
