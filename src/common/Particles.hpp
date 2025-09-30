@@ -329,20 +329,11 @@ public:
 
     if constexpr (std::is_same<T_space, minipic::Device>::value) {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-      device_vector_t w  = weight_.data_.d_view;
-      device_vector_t mx = mx_.data_.d_view;
-      device_vector_t my = my_.data_.d_view;
-      device_vector_t mz = mz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
+#if defined(__MINIPIC_KOKKOS_COMMON__)
       device_vector_t w  = weight_.data_;
       device_vector_t mx = mx_.data_;
       device_vector_t my = my_.data_;
       device_vector_t mz = mz_.data_;
-
 #endif
 
       Kokkos::parallel_reduce(

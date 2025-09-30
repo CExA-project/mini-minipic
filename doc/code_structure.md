@@ -47,4 +47,5 @@ Each file provides either a set of functions, a namespace or a data container (c
 | `__MINIPIC_KOKKOS_SCATTERVIEW__` | Activate specific KOKKOS projection types: scatter_view.       |
 | `__MINIPIC_KOKKOS_ATOMICVIEW__` | Activate specific KOKKOS projection types: atomic_view.         |
 | `__MINIPIC_KOKKOS_COMMON__` | Macro for code common to all Kokkos implementations.                |
-| `__MINIPIC_KOKKOS_DUALVIEW_COMMON__ ` | Macro for code common to all Kokkos implementations using dual_view. |
+| `__MINIPIC_KOKKOS_NON_UNIFIED__ ` | Macro for code using Kokkos with non unified memory           |
+| `__MINIPIC_KOKKOS_UNIFIED__ ` | Macro for code using Kokkos with unified memory                   |

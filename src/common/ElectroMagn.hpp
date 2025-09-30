@@ -72,7 +72,6 @@ public:
     inv_dz_m          = params.inv_dz;
     inv_cell_volume_m = params.inv_cell_volume;
 
-
     DEBUG("Start Allocate current arrays");
     Jx_m.allocate(nx_d_m, ny_p_m + 2, nz_p_m + 2, backend, 0.0, 1, 0, 0, "Jx");
     Jy_m.allocate(nx_p_m + 2, ny_d_m, nz_p_m + 2, backend, 0.0, 0, 1, 0, "Jy");

@@ -55,7 +55,6 @@ auto interpolate(ElectroMagn &em, Patch &patch) -> void {
       // interpolation electric field
       // Ex (d, p , p)
       {
-
         const mini_float coeffs[3] = {ixn + 0.5, iyn, izn};
 
         const auto v00 =

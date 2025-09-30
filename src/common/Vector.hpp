@@ -24,10 +24,9 @@ public:
   unsigned int size_;
 
   // Main data
-#if defined(__MINIPIC_KOKKOS__)
-  Kokkos::DualView<T *> data_;
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-  Kokkos::DualView<T *, Kokkos::SharedSpace> data_;
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+  Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space> data_;
+  decltype(Kokkos::create_mirror_view(data_)) data_h_;
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
   Kokkos::View<T *, Kokkos::SharedSpace> data_;
 #else
@@ -68,9 +67,8 @@ public:
   void allocate(std::string name, unsigned int size, Backend &backend) {
     size_ = size;
 #if defined(__MINIPIC_KOKKOS__)
-    data_ = Kokkos::DualView<T *>(name, size);
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-    data_ = Kokkos::DualView<T *, Kokkos::SharedSpace>(name, size);
+    data_ = Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space>(name, size);
+    data_h_ = Kokkos::create_mirror_view(data_);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     data_ = Kokkos::View<T *, Kokkos::SharedSpace>(name, size);
 #else
@@ -84,8 +82,8 @@ public:
   //! \return Host data accessor (if not device, point to the host data)
   // ______________________________________________________________________
   INLINE T &operator[](const int i) {
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-    return data_.h_view(i);
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+    return data_h_(i);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     return data_(i);
 #else
@@ -99,8 +97,8 @@ public:
   //! \return Host data accessor (if not device, point to the host data)
   // ______________________________________________________________________
   INLINE T &operator()(const int i) {
-#if defined(__MINIPIC_KOKKOS__) || defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-    return data_.h_view(i);
+#if defined(__MINIPIC_KOKKOS__)
+    return data_h_(i);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     return data_(i);
 #else
@@ -114,8 +112,8 @@ public:
   //! \return host pointer at index i
   // ______________________________________________________________________
   INLINE T &h(const int i) {
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-    return data_.h_view(i);
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+    return data_h_(i);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     return data_(i);
 #else
@@ -138,8 +136,8 @@ public:
 
     // Host
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-      return data_.h_view.data();
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+      return data_h_.data();
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       return data_.data();
 #else
@@ -148,8 +146,8 @@ public:
 
       // Device
     } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-      return data_.d_view.data();
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+      return data_.data();
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       return data_.data();
 #else
@@ -182,15 +180,7 @@ public:
                     std::is_same<T_space, minipic::Device>::value,
                   "Must be minipic::host or minipic::device");
 
-#if defined(__MINIPIC_KOKKOS__) || defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-    // Check that the space is either host or device
-    if constexpr (std::is_same<T_space, minipic::Host>::value) {
-      data_.modify_host();
-    } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
-      data_.modify_device();
-    }
-    data_.resize(new_size);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#if defined(__MINIPIC_KOKKOS__)
     Kokkos::resize(data_, new_size);
 #else
     data_.resize(new_size);
@@ -210,9 +200,9 @@ public:
 
     resize(new_size, space); // j'appele la méthode d'avant
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
     for (auto ip = size_; ip < new_size; ++ip) {
-      data_.h_view(ip) = value;
+      data_h_(ip) = value;
     }
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     for (auto ip = size_; ip < new_size; ++ip) {
@@ -257,21 +247,12 @@ public:
 #if defined(__MINIPIC_KOKKOS__)
       // Fill on host
       for (auto i = 0; i < size_; ++i) {
-        data_.h_view(i) = v;
+        data_h_(i) = v;
       }
 
       // quest
       // Boucle non async
       // Kokkos::fence();
-
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-      // quest
-      //      // Fill only on device (uvm)
-      //      Kokkos::parallel_for(
-      //        size_,
-      //        KOKKOS_CLASS_LAMBDA(const int ip) { data_.d_view(ip) = v; });
-
-      //     Kokkos::fence();
 
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       Kokkos::Experimental::fill(Kokkos::DefaultHostExecutionSpace(),
@@ -290,14 +271,8 @@ public:
       // Kokkos::Experimental::fill(Kokkos::DefaultHostExecutionSpace(), data_m.h_view, 0.);
 
       // Fill on device
-      Kokkos::parallel_for(size_, KOKKOS_CLASS_LAMBDA(const int ip) { data_.d_view(ip) = v; });
-
-      Kokkos::fence();
-
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-
-      // Fill only on device (uvm)
-      Kokkos::parallel_for(size_, KOKKOS_CLASS_LAMBDA(const int ip) { data_.d_view(ip) = v; });
+      auto& data_ref = data_;
+      Kokkos::parallel_for(size_, KOKKOS_LAMBDA(const int ip) { data_ref(ip) = v; });
 
       Kokkos::fence();
 
@@ -343,14 +318,15 @@ public:
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS__) || defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
+#if defined(__MINIPIC_KOKKOS__)
 
       typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
 
+      auto& data_ref = data_h_;
       Kokkos::parallel_reduce(
         "sum",
         range_policy(0, size_),
-        KOKKOS_CLASS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_.h_view(i), power); },
+        KOKKOS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_ref(i), power); },
         sum);
 
       Kokkos::fence();
@@ -359,10 +335,11 @@ public:
 
       typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
 
+      auto& data_ref = data_
       Kokkos::parallel_reduce(
         "sum",
         range_policy(0, size_),
-        KOKKOS_CLASS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_(i), power); },
+        KOKKOS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_ref(i), power); },
         sum);
 
       Kokkos::fence();
@@ -379,9 +356,7 @@ public:
 #if defined(__MINIPIC_KOKKOS_COMMON__)
 
 #if defined(__MINIPIC_KOKKOS__)
-      typename Kokkos::DualView<T *>::t_dev view = data_.d_view;
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-      typename Kokkos::DualView<T *, Kokkos::SharedSpace>::t_dev view = data_.d_view;
+      typename Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space> view = data_;
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       typename Kokkos::View<T *, Kokkos::SharedSpace> view = data_;
 #endif
@@ -389,7 +364,7 @@ public:
       Kokkos::parallel_reduce(
         "sum",
         size_,
-        KOKKOS_CLASS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(view(i), power); },
+        KOKKOS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(view(i), power); },
         sum);
 
       Kokkos::fence();
@@ -426,10 +401,7 @@ public:
                   std::is_same<to, minipic::Device>::value) {
 
 #if defined(__MINIPIC_KOKKOS__)
-      data_.modify_host();
-      data_.template sync<typename Kokkos::DualView<T *>::execution_space>();
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-      // nothing (UVM)
+      Kokkos::deep_copy(data_, data_h_);
 #endif
 
       // Device -> Host
@@ -437,10 +409,7 @@ public:
                          std::is_same<to, minipic::Host>::value) {
 
 #if defined(__MINIPIC_KOKKOS__)
-      data_.modify_device();
-      data_.template sync<typename Kokkos::DualView<T *>::host_mirror_space>();
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-      // nothing (UVM)
+      Kokkos::deep_copy(data_h_, data_);
 #endif
     }
   }
@@ -451,13 +420,8 @@ public:
 
 #if defined(__MINIPIC_KOKKOS__)
 
-using vector_t        = Kokkos::DualView<mini_float *>::t_host;
-using device_vector_t = Kokkos::DualView<mini_float *>::t_dev;
-
-#elif defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__)
-
-using vector_t        = Kokkos::DualView<mini_float *, Kokkos::SharedSpace>::t_host;
-using device_vector_t = Kokkos::DualView<mini_float *, Kokkos::SharedSpace>::t_dev;
+using vector_t        = Kokkos::View<mini_float *, Kokkos::DefaultHostExecutionSpace::memory_space>;
+using device_vector_t = Kokkos::View<mini_float *, Kokkos::DefaultExecutionSpace::memory_space>;
 
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
 

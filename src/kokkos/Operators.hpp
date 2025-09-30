@@ -29,51 +29,25 @@ auto interpolate(ElectroMagn &em, Patch &patch) -> void {
 
     const int n_particles = patch.particles_m[is].size();
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+    device_field_t Ex = em.Ex_m.data_m;
+    device_field_t Ey = em.Ey_m.data_m;
+    device_field_t Ez = em.Ez_m.data_m;
 
-    device_field_t Ex = em.Ex_m.data_m.d_view;
-    device_field_t Ey = em.Ey_m.data_m.d_view;
-    device_field_t Ez = em.Ez_m.data_m.d_view;
+    device_field_t Bx = em.Bx_m.data_m;
+    device_field_t By = em.By_m.data_m;
+    device_field_t Bz = em.Bz_m.data_m;
 
-    device_field_t Bx = em.Bx_m.data_m.d_view;
-    device_field_t By = em.By_m.data_m.d_view;
-    device_field_t Bz = em.Bz_m.data_m.d_view;
+    device_vector_t x = patch.particles_m[is].x_.data_;
+    device_vector_t y = patch.particles_m[is].y_.data_;
+    device_vector_t z = patch.particles_m[is].z_.data_;
 
-    device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-    device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-    device_vector_t z = patch.particles_m[is].z_.data_.d_view;
+    device_vector_t Exp = patch.particles_m[is].Ex_.data_;
+    device_vector_t Eyp = patch.particles_m[is].Ey_.data_;
+    device_vector_t Ezp = patch.particles_m[is].Ez_.data_;
 
-    device_vector_t Exp = patch.particles_m[is].Ex_.data_.d_view;
-    device_vector_t Eyp = patch.particles_m[is].Ey_.data_.d_view;
-    device_vector_t Ezp = patch.particles_m[is].Ez_.data_.d_view;
-
-    device_vector_t Bxp = patch.particles_m[is].Bx_.data_.d_view;
-    device_vector_t Byp = patch.particles_m[is].By_.data_.d_view;
-    device_vector_t Bzp = patch.particles_m[is].Bz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    field_t Ex = em.Ex_m.data_m;
-    field_t Ey = em.Ey_m.data_m;
-    field_t Ez = em.Ez_m.data_m;
-
-    field_t Bx = em.Bx_m.data_m;
-    field_t By = em.By_m.data_m;
-    field_t Bz = em.Bz_m.data_m;
-
-    vector_t x = patch.particles_m[is].x_.data_;
-    vector_t y = patch.particles_m[is].y_.data_;
-    vector_t z = patch.particles_m[is].z_.data_;
-
-    vector_t Exp = patch.particles_m[is].Ex_.data_;
-    vector_t Eyp = patch.particles_m[is].Ey_.data_;
-    vector_t Ezp = patch.particles_m[is].Ez_.data_;
-
-    vector_t Bxp = patch.particles_m[is].Bx_.data_;
-    vector_t Byp = patch.particles_m[is].By_.data_;
-    vector_t Bzp = patch.particles_m[is].Bz_.data_;
-
-#endif
+    device_vector_t Bxp = patch.particles_m[is].Bx_.data_;
+    device_vector_t Byp = patch.particles_m[is].By_.data_;
+    device_vector_t Bzp = patch.particles_m[is].Bz_.data_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -296,43 +270,21 @@ auto push(Patch &patch, double dt) -> void {
     // q' = dt * (q/2m)
     const mini_float qp = patch.particles_m[is].charge_m * dt * 0.5 / patch.particles_m[is].mass_m;
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+    device_vector_t x = patch.particles_m[is].x_.data_;
+    device_vector_t y = patch.particles_m[is].y_.data_;
+    device_vector_t z = patch.particles_m[is].z_.data_;
 
-    device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-    device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-    device_vector_t z = patch.particles_m[is].z_.data_.d_view;
+    device_vector_t mx = patch.particles_m[is].mx_.data_;
+    device_vector_t my = patch.particles_m[is].my_.data_;
+    device_vector_t mz = patch.particles_m[is].mz_.data_;
 
-    device_vector_t mx = patch.particles_m[is].mx_.data_.d_view;
-    device_vector_t my = patch.particles_m[is].my_.data_.d_view;
-    device_vector_t mz = patch.particles_m[is].mz_.data_.d_view;
+    device_vector_t Exp = patch.particles_m[is].Ex_.data_;
+    device_vector_t Eyp = patch.particles_m[is].Ey_.data_;
+    device_vector_t Ezp = patch.particles_m[is].Ez_.data_;
 
-    device_vector_t Exp = patch.particles_m[is].Ex_.data_.d_view;
-    device_vector_t Eyp = patch.particles_m[is].Ey_.data_.d_view;
-    device_vector_t Ezp = patch.particles_m[is].Ez_.data_.d_view;
-
-    device_vector_t Bxp = patch.particles_m[is].Bx_.data_.d_view;
-    device_vector_t Byp = patch.particles_m[is].By_.data_.d_view;
-    device_vector_t Bzp = patch.particles_m[is].Bz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    vector_t x = patch.particles_m[is].x_.data_;
-    vector_t y = patch.particles_m[is].y_.data_;
-    vector_t z = patch.particles_m[is].z_.data_;
-
-    vector_t mx = patch.particles_m[is].mx_.data_;
-    vector_t my = patch.particles_m[is].my_.data_;
-    vector_t mz = patch.particles_m[is].mz_.data_;
-
-    vector_t Exp = patch.particles_m[is].Ex_.data_;
-    vector_t Eyp = patch.particles_m[is].Ey_.data_;
-    vector_t Ezp = patch.particles_m[is].Ez_.data_;
-
-    vector_t Bxp = patch.particles_m[is].Bx_.data_;
-    vector_t Byp = patch.particles_m[is].By_.data_;
-    vector_t Bzp = patch.particles_m[is].Bz_.data_;
-
-#endif
+    device_vector_t Bxp = patch.particles_m[is].Bx_.data_;
+    device_vector_t Byp = patch.particles_m[is].By_.data_;
+    device_vector_t Bzp = patch.particles_m[is].Bz_.data_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -419,35 +371,17 @@ auto push_momentum(Patch &patch, double dt) -> void {
     // q' = dt * (q/2m)
     const mini_float qp = patch.particles_m[is].charge_m * dt * 0.5 / patch.particles_m[is].mass_m;
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+    device_vector_t mx = patch.particles_m[is].mx_.data_;
+    device_vector_t my = patch.particles_m[is].my_.data_;
+    device_vector_t mz = patch.particles_m[is].mz_.data_;
 
-    device_vector_t mx = patch.particles_m[is].mx_.data_.d_view;
-    device_vector_t my = patch.particles_m[is].my_.data_.d_view;
-    device_vector_t mz = patch.particles_m[is].mz_.data_.d_view;
+    device_vector_t Exp = patch.particles_m[is].Ex_.data_;
+    device_vector_t Eyp = patch.particles_m[is].Ey_.data_;
+    device_vector_t Ezp = patch.particles_m[is].Ez_.data_;
 
-    device_vector_t Exp = patch.particles_m[is].Ex_.data_.d_view;
-    device_vector_t Eyp = patch.particles_m[is].Ey_.data_.d_view;
-    device_vector_t Ezp = patch.particles_m[is].Ez_.data_.d_view;
-
-    device_vector_t Bxp = patch.particles_m[is].Bx_.data_.d_view;
-    device_vector_t Byp = patch.particles_m[is].By_.data_.d_view;
-    device_vector_t Bzp = patch.particles_m[is].Bz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    vector_t mx = patch.particles_m[is].mx_.data_;
-    vector_t my = patch.particles_m[is].my_.data_;
-    vector_t mz = patch.particles_m[is].mz_.data_;
-
-    vector_t Exp = patch.particles_m[is].Ex_.data_;
-    vector_t Eyp = patch.particles_m[is].Ey_.data_;
-    vector_t Ezp = patch.particles_m[is].Ez_.data_;
-
-    vector_t Bxp = patch.particles_m[is].Bx_.data_;
-    vector_t Byp = patch.particles_m[is].By_.data_;
-    vector_t Bzp = patch.particles_m[is].Bz_.data_;
-
-#endif
+    device_vector_t Bxp = patch.particles_m[is].Bx_.data_;
+    device_vector_t Byp = patch.particles_m[is].By_.data_;
+    device_vector_t Bzp = patch.particles_m[is].Bz_.data_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -527,19 +461,9 @@ auto pushBC(Params &params, Patch &patch) -> void {
 
         unsigned int n_particles = patch.particles_m[is].size();
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-        device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-        device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-        device_vector_t z = patch.particles_m[is].z_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
         device_vector_t x = patch.particles_m[is].x_.data_;
         device_vector_t y = patch.particles_m[is].y_.data_;
         device_vector_t z = patch.particles_m[is].z_.data_;
-
-#endif
 
         Kokkos::parallel_for(
           n_particles,
@@ -575,18 +499,6 @@ auto pushBC(Params &params, Patch &patch) -> void {
 
         unsigned int n_particles = patch.particles_m[is].size();
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-        device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-        device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-        device_vector_t z = patch.particles_m[is].z_.data_.d_view;
-
-        device_vector_t mx = patch.particles_m[is].mx_.data_.d_view;
-        device_vector_t my = patch.particles_m[is].my_.data_.d_view;
-        device_vector_t mz = patch.particles_m[is].mz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
         device_vector_t x = patch.particles_m[is].x_.data_;
         device_vector_t y = patch.particles_m[is].y_.data_;
         device_vector_t z = patch.particles_m[is].z_.data_;
@@ -594,8 +506,6 @@ auto pushBC(Params &params, Patch &patch) -> void {
         device_vector_t mx = patch.particles_m[is].mx_.data_;
         device_vector_t my = patch.particles_m[is].my_.data_;
         device_vector_t mz = patch.particles_m[is].mz_.data_;
-
-#endif
 
         Kokkos::parallel_for(
           n_particles,
@@ -668,39 +578,19 @@ auto project(Params &params, Patch &patch) -> void {
       const double ymin = patch.inf_m[1];
       const double zmin = patch.inf_m[2];
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+      device_field_t Jx_species = patch.vec_Jx_m[is].data_m;
+      device_field_t Jy_species = patch.vec_Jy_m[is].data_m;
+      device_field_t Jz_species = patch.vec_Jz_m[is].data_m;
 
-      device_field_t Jx_species = patch.vec_Jx_m[is].data_m.d_view;
-      device_field_t Jy_species = patch.vec_Jy_m[is].data_m.d_view;
-      device_field_t Jz_species = patch.vec_Jz_m[is].data_m.d_view;
+      device_vector_t w = patch.particles_m[is].weight_.data_;
 
-      device_vector_t w = patch.particles_m[is].weight_.data_.d_view;
+      device_vector_t x = patch.particles_m[is].x_.data_;
+      device_vector_t y = patch.particles_m[is].y_.data_;
+      device_vector_t z = patch.particles_m[is].z_.data_;
 
-      device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-      device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-      device_vector_t z = patch.particles_m[is].z_.data_.d_view;
-
-      device_vector_t mx = patch.particles_m[is].mx_.data_.d_view;
-      device_vector_t my = patch.particles_m[is].my_.data_.d_view;
-      device_vector_t mz = patch.particles_m[is].mz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-      field_t Jx_species = patch.vec_Jx_m[is].data_m;
-      field_t Jy_species = patch.vec_Jy_m[is].data_m;
-      field_t Jz_species = patch.vec_Jz_m[is].data_m;
-
-      vector_t w = patch.particles_m[is].weight_.data_;
-
-      vector_t x = patch.particles_m[is].x_.data_;
-      vector_t y = patch.particles_m[is].y_.data_;
-      vector_t z = patch.particles_m[is].z_.data_;
-
-      vector_t mx = patch.particles_m[is].mx_.data_;
-      vector_t my = patch.particles_m[is].my_.data_;
-      vector_t mz = patch.particles_m[is].mz_.data_;
-
-#endif
+      device_vector_t mx = patch.particles_m[is].mx_.data_;
+      device_vector_t my = patch.particles_m[is].my_.data_;
+      device_vector_t mz = patch.particles_m[is].mz_.data_;
 
 #if defined(__MINIPIC_KOKKOS_SCATTERVIEW__)
       Kokkos::Experimental::ScatterView<double ***> scatter_Jx_loc(Jx_species);
@@ -831,19 +721,9 @@ auto project(Params &params, Patch &patch) -> void {
 // _______________________________________________________________________
 void project(Params &params, ElectroMagn &em, Patch &patch) {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-  device_field_t Jx_device = em.Jx_m.data_m.d_view;
-  device_field_t Jy_device = em.Jx_m.data_m.d_view;
-  device_field_t Jz_device = em.Jx_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-  field_t Jx_device = em.Jx_m.data_m;
-  field_t Jy_device = em.Jx_m.data_m;
-  field_t Jz_device = em.Jx_m.data_m;
-
-#endif
+  device_field_t Jx_device = em.Jx_m.data_m;
+  device_field_t Jy_device = em.Jx_m.data_m;
+  device_field_t Jz_device = em.Jx_m.data_m;
 
 #if defined(__MINIPIC_KOKKOS_SCATTERVIEW__)
   // Use ScatterView
@@ -880,31 +760,15 @@ void project(Params &params, ElectroMagn &em, Patch &patch) {
     const double inv_cell_volume_x_q = params.inv_cell_volume * patch.particles_m[is].charge_m;
     // double m       = particles_m[is].mass_m;
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+    device_vector_t w = patch.particles_m[is].weight_.data_;
 
-    device_vector_t w = patch.particles_m[is].weight_.data_.d_view;
+    device_vector_t x = patch.particles_m[is].x_.data_;
+    device_vector_t y = patch.particles_m[is].y_.data_;
+    device_vector_t z = patch.particles_m[is].z_.data_;
 
-    device_vector_t x = patch.particles_m[is].x_.data_.d_view;
-    device_vector_t y = patch.particles_m[is].y_.data_.d_view;
-    device_vector_t z = patch.particles_m[is].z_.data_.d_view;
-
-    device_vector_t mx = patch.particles_m[is].mx_.data_.d_view;
-    device_vector_t my = patch.particles_m[is].my_.data_.d_view;
-    device_vector_t mz = patch.particles_m[is].mz_.data_.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    vector_t w = patch.particles_m[is].weight_.data_;
-
-    vector_t x = patch.particles_m[is].x_.data_;
-    vector_t y = patch.particles_m[is].y_.data_;
-    vector_t z = patch.particles_m[is].z_.data_;
-
-    vector_t mx = patch.particles_m[is].mx_.data_;
-    vector_t my = patch.particles_m[is].my_.data_;
-    vector_t mz = patch.particles_m[is].mz_.data_;
-
-#endif
+    device_vector_t mx = patch.particles_m[is].mx_.data_;
+    device_vector_t my = patch.particles_m[is].my_.data_;
+    device_vector_t mz = patch.particles_m[is].mz_.data_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -1081,38 +945,21 @@ auto solve_maxwell(const Params &params, ElectroMagn &em) -> void {
   /////     Solve Maxwell Ampere (E)
   // Electric field Ex (d,p,p)
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+  device_field_t Jx = em.Jx_m.data_m;
+  device_field_t Jy = em.Jy_m.data_m;
+  device_field_t Jz = em.Jz_m.data_m;
 
-  device_field_t Jx = em.Jx_m.data_m.d_view;
-  device_field_t Jy = em.Jy_m.data_m.d_view;
-  device_field_t Jz = em.Jz_m.data_m.d_view;
+  device_field_t Ex = em.Ex_m.data_m;
+  device_field_t Ey = em.Ey_m.data_m;
+  device_field_t Ez = em.Ez_m.data_m;
 
-  device_field_t Ex = em.Ex_m.data_m.d_view;
-  device_field_t Ey = em.Ey_m.data_m.d_view;
-  device_field_t Ez = em.Ez_m.data_m.d_view;
-
-  device_field_t Bx = em.Bx_m.data_m.d_view;
-  device_field_t By = em.By_m.data_m.d_view;
-  device_field_t Bz = em.Bz_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-  field_t Jx = em.Jx_m.data_m;
-  field_t Jy = em.Jy_m.data_m;
-  field_t Jz = em.Jz_m.data_m;
-
-  field_t Ex = em.Ex_m.data_m;
-  field_t Ey = em.Ey_m.data_m;
-  field_t Ez = em.Ez_m.data_m;
-
-  field_t Bx = em.Bx_m.data_m;
-  field_t By = em.By_m.data_m;
-  field_t Bz = em.Bz_m.data_m;
-
-#endif
+  device_field_t Bx = em.Bx_m.data_m;
+  device_field_t By = em.By_m.data_m;
+  device_field_t Bz = em.Bz_m.data_m;
 
   typedef Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<3>> mdrange_policy;
 
+  // Electric field Ex (d,p,p)
   Kokkos::parallel_for(
     mdrange_policy({0, 0, 0}, {em.nx_d_m, em.ny_p_m, em.nz_p_m}),
     KOKKOS_LAMBDA(const int ix, const int iy, const int iz) {
@@ -1184,19 +1031,9 @@ void currentBC(Params &params, ElectroMagn &em) {
 
   if (params.boundary_condition == "periodic") {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-    device_field_t Jx = em.Jx_m.data_m.d_view;
-    device_field_t Jy = em.Jy_m.data_m.d_view;
-    device_field_t Jz = em.Jz_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    field_t Jx = em.Jx_m.data_m;
-    field_t Jy = em.Jy_m.data_m;
-    field_t Jz = em.Jz_m.data_m;
-
-#endif
+    device_field_t Jx = em.Jx_m.data_m;
+    device_field_t Jy = em.Jy_m.data_m;
+    device_field_t Jz = em.Jz_m.data_m;
 
     const auto nx_Jx = em.Jx_m.nx();
     const auto ny_Jx = em.Jx_m.ny();
@@ -1323,24 +1160,13 @@ void currentBC(Params &params, ElectroMagn &em) {
 //! \param[in] Params & params - global constant parameters
 // _______________________________________________________________
 auto solveBC(Params &params, ElectroMagn &em) -> void {
-
   typedef Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>> mdrange_policy;
 
   if (params.boundary_condition == "periodic") {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-    device_field_t Bx = em.Bx_m.data_m.d_view;
-    device_field_t By = em.By_m.data_m.d_view;
-    device_field_t Bz = em.Bz_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    field_t Bx = em.Bx_m.data_m;
-    field_t By = em.By_m.data_m;
-    field_t Bz = em.Bz_m.data_m;
-
-#endif
+    device_field_t Bx = em.Bx_m.data_m;
+    device_field_t By = em.By_m.data_m;
+    device_field_t Bz = em.Bz_m.data_m;
 
     const auto nx_Bx = em.Bx_m.nx();
     const auto ny_Bx = em.Bx_m.ny();
@@ -1427,19 +1253,9 @@ auto solveBC(Params &params, ElectroMagn &em) -> void {
 
   } else if (params.boundary_condition == "reflective") {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-    device_field_t Bx = em.Bx_m.data_m.d_view;
-    device_field_t By = em.By_m.data_m.d_view;
-    device_field_t Bz = em.Bz_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-    field_t Bx = em.Bx_m.data_m;
-    field_t By = em.By_m.data_m;
-    field_t Bz = em.Bz_m.data_m;
-
-#endif
+    device_field_t Bx = em.Bx_m.data_m;
+    device_field_t By = em.By_m.data_m;
+    device_field_t Bz = em.Bz_m.data_m;
 
     const auto nx_Bx = em.Bx_m.nx();
     const auto ny_Bx = em.Bx_m.ny();
@@ -1556,17 +1372,6 @@ auto reduc_current(Patch &patch) -> void {
     // Only if particles projected
     if (patch.projected_[is]) {
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-      device_field_t Jx_0  = patch.vec_Jx_m[0].data_m.d_view;
-      device_field_t Jx_is = patch.vec_Jx_m[is].data_m.d_view;
-
-      device_field_t Jy_0  = patch.vec_Jy_m[0].data_m.d_view;
-      device_field_t Jy_is = patch.vec_Jy_m[is].data_m.d_view;
-
-      device_field_t Jz_0  = patch.vec_Jz_m[0].data_m.d_view;
-      device_field_t Jz_is = patch.vec_Jz_m[is].data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       device_field_t Jx_0  = patch.vec_Jx_m[0].data_m;
       device_field_t Jx_is = patch.vec_Jx_m[is].data_m;
 
@@ -1576,17 +1381,13 @@ auto reduc_current(Patch &patch) -> void {
       device_field_t Jz_0  = patch.vec_Jz_m[0].data_m;
       device_field_t Jz_is = patch.vec_Jz_m[is].data_m;
 
-#endif
-
       typedef Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<3>> mdrange_policy;
       Kokkos::parallel_for(
         mdrange_policy({0, 0, 0},
                        {patch.vec_Jx_m[is].nx(), patch.vec_Jx_m[is].ny(), patch.vec_Jx_m[is].nz()}),
         KOKKOS_LAMBDA(const int ix, const int iy, const int iz) {
           Jx_0(ix, iy, iz) += Jx_is(ix, iy, iz);
-        }
-
-      );
+        });
 
       typedef Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<3>> mdrange_policy;
       Kokkos::parallel_for(
@@ -1636,19 +1437,6 @@ auto local2global(ElectroMagn &em, Patch &patch) -> void {
     // std::cerr << i_global_p  << " " << j_global_p << " " << k_global_p << std::endl;
     // std::cerr << "nx: " << vec_Jx_m[0].nx()  << " " << em.Jx_m.nx() << " " << std::endl;
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
-
-    device_field_t Jx_0 = patch.vec_Jx_m[0].data_m.d_view;
-    device_field_t Jx   = em.Jx_m.data_m.d_view;
-
-    device_field_t Jy_0 = patch.vec_Jy_m[0].data_m.d_view;
-    device_field_t Jy   = em.Jy_m.data_m.d_view;
-
-    device_field_t Jz_0 = patch.vec_Jz_m[0].data_m.d_view;
-    device_field_t Jz   = em.Jz_m.data_m.d_view;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
     device_field_t Jx_0 = patch.vec_Jx_m[0].data_m;
     device_field_t Jx   = em.Jx_m.data_m;
 
@@ -1657,8 +1445,6 @@ auto local2global(ElectroMagn &em, Patch &patch) -> void {
 
     device_field_t Jz_0 = patch.vec_Jz_m[0].data_m;
     device_field_t Jz   = em.Jz_m.data_m;
-
-#endif
 
     typedef Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<3>> mdrange_policy;
     Kokkos::parallel_for(

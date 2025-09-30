@@ -69,7 +69,7 @@ project (minipic LANGUAGES ${LANGUAGES})
 # Sources and compile options
 
 file(GLOB_RECURSE SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/kokkos/*.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
-set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_KOKKOS__ -D__MINIPIC_KOKKOS_COMMON__ -D__MINIPIC_KOKKOS_DUALVIEW_COMMON__)
+set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_KOKKOS__ -D__MINIPIC_KOKKOS_COMMON__ -D__MINIPIC_KOKKOS_NON_UNIFIED__)
 include_directories(src/setups src/common src/kokkos)
 
 find_package(Kokkos QUIET)
@@ -108,4 +108,3 @@ if (MINIPIC)
   target_link_libraries(${EXE_NAME} PRIVATE Kokkos::kokkos)
 
 endif()
-

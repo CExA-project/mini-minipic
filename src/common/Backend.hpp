@@ -53,7 +53,7 @@ public:
 
     Kokkos::initialize(argc, argv);
 
-#if defined(__MINIPIC_KOKKOS_DUALVIEW_UNIFIED__) || defined(__MINIPIC_KOKKOS_UNIFIED__)
+#if defined(__MINIPIC_KOKKOS_UNIFIED__)
     static_assert(Kokkos::has_shared_space, "code only works on backends with SharedSpace");
 #endif
 #endif
