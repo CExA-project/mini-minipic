@@ -33,12 +33,12 @@ configuration_list = {
                  'benchmarks' : [ "default_gpu", "beam_gpu", "antenna" ]},
 
     'kokkos_gpu' : { 'compiler' : 'g++',
-                 'cmake' : '-DCMAKE_VERBOSE_MAKEFILE=ON -DDEVICE="nvidia_a100" -DCMAKE_BUILD_TYPE=Release',
+                 'cmake' : '-DCMAKE_VERBOSE_MAKEFILE=ON" -DCMAKE_BUILD_TYPE=Release',
                 #  'cmake' : '-DCMAKE_VERBOSE_MAKEFILE=ON -DBACKEND="kokkos" -DDEVICE="nvidia_v100"',
                  'env' : 'OMP_PROC_BIND=spread',
                  'prefix' : '',
                  'args' : [ '', '', '', '', ''],
-                 'exe_name' : 'minipic.kokkos',
+                 'exe_name' : 'minipic',
                  'threads' : [1, 1, 1],
                  'benchmarks' : [ "default_gpu", "beam_gpu", "antenna"]},
 
