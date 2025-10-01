@@ -63,28 +63,6 @@ variables:
 
 test_omp:
   # only: *default_run
-  rules:
-    # If not on the master branch and related files have been modified, run the CI
-    # - if: $CI_COMMIT_BRANCH != "master"
-    #   changes:
-    #     - src/openmp/*
-    #     - src/common/*
-    #     - src/setups/*
-    #     - src/main.cpp
-    #     - .gitlab-ci.yml
-    #     - tests/run.py
-    #     - validation/*
-    #     - CMakeLists.txt
-    #   when: always
-    # If has [run ci] in the commit message, always run the CI
-    - if: $CI_COMMIT_MESSAGE =~ /\[run ci\]/
-      when: always
-    # Do not run if draft or skip ci
-    - if: $CI_COMMIT_REF_NAME =~ /\[draft\]/ || $CI_COMMIT_MESSAGE =~ /\[skip ci\]/
-      when: never
-    # If on the master branch, always run the CI
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
   tags:
     - ruche
   stage: test
@@ -105,28 +83,6 @@ test_omp:
 
 test_kokkos_omp:
   # only: *default_run
-  rules:
-    # If not on the master branch and `src/kokkos` has been modified, run the CI
-    # - if: $CI_COMMIT_BRANCH != "master"
-    #   changes:
-    #     - src/kokkos/*
-    #     - src/common/*
-    #     - src/main.cpp
-    #     - src/setups/*
-    #     - .gitlab-ci.yml
-    #     - tests/run.py
-    #     - validation/*
-    #     - CMakeLists.txt
-    #   when: always
-    # If has `[run ci]` in the commit message, always run the CI
-    - if: $CI_COMMIT_MESSAGE =~ /\[run ci\]/
-      when: always
-    # Do not run if draft or skip ci
-    - if: $CI_COMMIT_REF_NAME =~ /\[draft\]/ || $CI_COMMIT_MESSAGE =~ /\[skip ci\]/
-      when: never
-    # If on the master branch, always run the CI
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
   tags:
     - ruche
   stage: test
@@ -145,28 +101,6 @@ test_kokkos_omp:
 
 test_kokkos_gpu:
   # only: *default_run
-  rules:
-    # If not on the master branch and `src/kokkos` has been modified, run the CI
-    # - if: $CI_COMMIT_BRANCH != "master"
-    #   changes:
-    #     - src/kokkos/*
-    #     - src/common/*
-    #     - src/setups/*
-    #     - src/main.cpp
-    #     - .gitlab-ci.yml
-    #     - tests/run.py
-    #     - validation/*
-    #     - CMakeLists.txt
-    #   when: always
-    # If has [run ci] in the commit message, always run the CI
-    - if: $CI_COMMIT_MESSAGE =~ /\[run ci\]/
-      when: always
-    # Do not run if draft or skip ci
-    - if: $CI_COMMIT_REF_NAME =~ /\[draft\]/ || $CI_COMMIT_MESSAGE =~ /\[skip ci\]/
-      when: never
-    # If on the master branch, always run the CI
-    - if: $CI_COMMIT_BRANCH == "master"
-      when: always
   tags:
     - ruche
   stage: test
