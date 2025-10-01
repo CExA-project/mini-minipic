@@ -11,7 +11,7 @@ variables:
   # List of benchmarks to run
   BENCHMARKS: "default,beam,antenna"
 
-.default_run: &default_run [master, nvidia_profiling, thrust_counting_iterator]
+.default_run: &default_run [main, develop, pipeline]
 
 # _____________________________________________________________________________
 #
