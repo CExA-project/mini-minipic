@@ -13,6 +13,11 @@ import numpy as np
 def validate(evaluate=True, threshold=1e-10):
 
     # ______________________________________________________________________
+    # Reference data
+
+    reference_dict = {'scalar': {'fields': [500, 4.176915389526767e-11, 6.84235342733258e-11, 7.384372445331327e-11, 1.490359461146354e-13, 7.824479096513594e-11, 7.512299160674653e-11], 'species': [[[0, 17171.0, 1.486505893401618e-05], [0, 17171.0, 0.02727053664199492]], [[500, 17171.0, 1.315434546122977e-05], [500, 17171.0, 0.02727052355889318]]]}, 'gamma_spectrum': [[2.6341788307225324e-05, 2.6340187152554154e-05, 2.6306898149346666e-05, 2.6206688009942488e-05, 2.5975705446921505e-05, 2.5749079793833593e-05, 2.5452293402771052e-05, 2.517019636457644e-05, 2.4977679280317923e-05, 2.4735294342510844e-05], [2.6328534922736266e-05, 2.632853644089038e-05, 2.6328533755778843e-05, 2.6328544155090046e-05, 2.6328544972441783e-05, 2.6328567899607564e-05, 2.632856920474773e-05, 2.6328571264628347e-05, 2.632857386819752e-05, 2.6328558916765818e-05]]}
+
+    # ______________________________________________________________________
     # Check output files are created
 
     # list of output files
@@ -46,11 +51,9 @@ def validate(evaluate=True, threshold=1e-10):
 
     print(" > Check scalars")
 
-
-
     # Check final scalar values for fields
 
-    reference_data = [500, 4.124448552038559e-11, 7.163173980414326e-11, 7.844505241044072e-11, 1.0753209235313e-13, 8.019575880396739e-11, 7.667103357828862e-11]
+    reference_data = reference_dict["scalar"]["fields"]
 
     with open("diags/fields.txt", "r") as f:
         lines = f.readlines()
@@ -81,12 +84,11 @@ def validate(evaluate=True, threshold=1e-10):
 
     else:
 
-        print("    - reference_data = [{}, {}, {}, {}, {}, {}, {}]".format(iteration, Ex, Ey, Ez, Bx, By, Bz)) 
+        reference_dict["scalar"]["fields"] = [iteration, Ex, Ey, Ez, Bx, By, Bz]
 
     # Check initial scalar for species
 
-    reference_data = [[0, 17171, 1.486505893401623e-05], 
-                      [0, 17171, 0.02727053664199493]]
+    reference_data = reference_dict["scalar"]["species"][0]
 
     for ispecies in range(2):
 
@@ -110,9 +112,13 @@ def validate(evaluate=True, threshold=1e-10):
 
             minipic_ci.evaluate(energy, reference_data[ispecies][2], threshold, 'relative', 'Kinetic energy in species_{:02d}.txt is not correct'.format(ispecies)) 
 
+        else:
+
+            reference_dict["scalar"]["species"][0][ispecies] = [iteration, particles, energy]
+
     # Check final scalar for species
 
-    reference_data = [[500, 17171, 1.315416203546459e-05], [500, 17171, 0.02727052464789659]]
+    reference_data = reference_dict["scalar"]["species"][1]
 
     for ispecies in range(2):
 
@@ -136,13 +142,14 @@ def validate(evaluate=True, threshold=1e-10):
 
             minipic_ci.evaluate(energy, reference_data[ispecies][2], threshold, 'relative', 'Kinetic energy in species_{:02d}.txt is not correct'.format(ispecies)) 
 
+        else:
+
+            reference_dict["scalar"]["species"][1][ispecies] = [iteration, particles, energy]
+
     # ______________________________________________________________________
     # Check gamma spectrums
 
-    reference_sum_data = [
-        [2.6341788307225324e-05, 2.6340193071521304e-05, 2.630707755958522e-05, 2.620567052764382e-05, 2.5977739794666403e-05, 2.5745016811351395e-05, 2.544705187191869e-05, 2.516323961620942e-05, 2.4961479614754423e-05, 2.4719498510823074e-05],
-        [2.6328534922736266e-05, 2.632853714034016e-05, 2.6328533189048132e-05, 2.6328544284653243e-05, 2.6328542661491538e-05, 2.6328563090011446e-05, 2.6328573517162e-05, 2.632857026984209e-05, 2.6328586809892927e-05, 2.6328556641940606e-05]
-    ]
+    reference_sum_data = reference_dict["gamma_spectrum"]
 
     print(" > Checking gamma spectrums")
 
@@ -165,9 +172,29 @@ def validate(evaluate=True, threshold=1e-10):
             for i,it in enumerate(range(0,500,50)):
                 minipic_ci.evaluate(new_data[i], reference_sum_data[ispecies][i], 1e-9, 'relative', 'Gamma spectrum not similar at iteration {} for species {}'.format(it, ispecies))
 
+        else:
+                
+                reference_dict["gamma_spectrum"][ispecies] = new_data
+
+    if (not(evaluate)):
+
+        print("Reference data:")
+
+        # import json
+        # print(json.dumps(reference_dict, indent=4))
+        print(reference_dict)
 
 
+if __name__ == "__main__":
+    script_name = os.path.basename(__file__)
+    if not (os.path.exists("diags") and os.path.isdir("diags")):
+        print("Directory diags should be present where you run this script")
+        exit()
 
-
-
+    print("")
+    print(f"   -> Launch the validation process for {script_name}")
+    print("")
+    validate(evaluate=True)
+    print("")
+    print(f" \033[32mBenchmark `{script_name}` tested with success \033[39m")
 
