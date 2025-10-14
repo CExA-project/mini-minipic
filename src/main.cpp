@@ -12,9 +12,6 @@
 //! and should be not used for physics simulation
 /* _____________________________________________________________________ */
 
-#include <sys/time.h>
-
-#include "Backend.hpp"
 #include "Params.hpp"
 #include "SubDomain.hpp"
 
@@ -48,14 +45,11 @@ int main(int argc, char *argv[]) {
   // Print a summary of input parameters
   params.info();
 
-  // Create the backend parameters
-  Backend backend;
-
-  // Initialize the backend
-  backend.init(argc, argv, params);
+  // Initialize Kokkos
+  Kokkos::initialize(argc, argv);
 
   // Print the backend information
-  backend.info();
+  Kokkos::print_configuration(std::cout);
 
   {
 
@@ -70,7 +64,7 @@ int main(int argc, char *argv[]) {
     SubDomain subdomain;
 
     // Creation of the domain
-    subdomain.allocate(params, backend);
+    subdomain.allocate(params);
 
     // Initialization of the diagnostics
     Diags::initialize(params);
@@ -85,7 +79,7 @@ int main(int argc, char *argv[]) {
     // ______________________________________________________
 
     timers.start(timers.diags);
-    subdomain.diagnostics(params, timers, backend, 0);
+    subdomain.diagnostics(params, 0);
     timers.stop(timers.diags);
 
     // ______________________________________________________
@@ -101,51 +95,47 @@ int main(int argc, char *argv[]) {
 
     timers.start(timers.main_loop);
 
-      DEBUG("Start of main loop");
+    DEBUG("Start of main loop");
 
-      for (unsigned int it = 1; it <= params.n_it; it++) {
+    // start main loop
+    for (unsigned int it = 1; it <= params.n_it; it++) {
 
-        // _______________________________________________________
-        // Main loop for all programming models
+      timers.start(timers.pic_iteration);
 
-          timers.start(timers.pic_iteration);
+      // Single PIC iteration
+      subdomain.iterate(params, it);
 
-          // Single PIC iteration
-          subdomain.iterate(params, timers, backend, it);
+      timers.stop(timers.pic_iteration);
 
-          timers.stop(timers.pic_iteration);
-          timers.start(timers.diags);
-          
-          // Diagnostics
-          subdomain.diagnostics(params, timers, backend, it);
+      timers.start(timers.diags);
 
-          timers.stop(timers.diags);
+      // Diagnostics
+      subdomain.diagnostics(params, it);
 
-          {
-            if (!(it % params.print_period)) {
+    if (!(it % params.print_period)) {
 
-              const unsigned int total_number_of_particles =
-                subdomain.get_total_number_of_particles();
+        const unsigned int total_number_of_particles =
+          subdomain.get_total_number_of_particles();
 
-              double elapsed_time   = timers.get_elapsed_time();
-              double remaining_time = elapsed_time / it * (params.n_it - it);
+        double elapsed_time   = timers.get_elapsed_time();
+        double remaining_time = elapsed_time / it * (params.n_it - it);
 
-              std::cout << " " << std::setw(9) << it;
-              std::cout << " | " << std::fixed << std::setprecision(1) << std::setw(5)
-                        << static_cast<float>(it) / static_cast<float>(params.n_it) * 100;
-              std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(9)
-                        << total_number_of_particles;
-              std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(8)
-                        << elapsed_time;
-              std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(9)
-                        << remaining_time;
-              std::cout << " | " << std::endl;
-            }
+        std::cout << " " << std::setw(9) << it;
+        std::cout << " | " << std::fixed << std::setprecision(1) << std::setw(5)
+                  << static_cast<float>(it) / static_cast<float>(params.n_it) * 100;
+        std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(9)
+                  << total_number_of_particles;
+        std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(8)
+                  << elapsed_time;
+        std::cout << " | " << std::scientific << std::setprecision(2) << std::setw(9)
+                  << remaining_time;
+        std::cout << " | " << std::endl;
+      }
+      timers.stop(timers.diags);
 
-            timers.save(params, it);
-          }
+      timers.save(params, it);
 
-      } // end main loop
+    } // end main loop
 
     DEBUG("End of main loop");
 
@@ -157,14 +147,13 @@ int main(int argc, char *argv[]) {
     // ____________________________________________________
     // Print timers
 
-    timers.print(params);
+    timers.print();
 
     timers.save(params, params.n_it + 1);
 
   }
-  // Kokkos::finalize();
 
-  backend.finalize();
+  Kokkos::finalize();
 
   std::cerr << "> minipic finalized" << std::endl;
   return 0;

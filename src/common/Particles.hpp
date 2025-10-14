@@ -18,7 +18,6 @@
 #include <math.h>
 #include <random>
 
-#include "Backend.hpp"
 #include "Vector.hpp"
 
 // ________________________________________________________
@@ -136,7 +135,7 @@ public:
   //
   //! \brief Alloc memory for a new species
   // __________________________________________________________________________
-  void allocate(T q, T m, T t, int n_particles, T icv, Backend &backend) {
+  void allocate(T q, T m, T t, int n_particles, T icv) {
     inv_cell_volume_m = icv;
 
     n_particles_m = n_particles;
@@ -146,25 +145,25 @@ public:
     mass_m        = m;
     temperature_m = t;
 
-    x_.allocate("x", n_particles, backend);
-    y_.allocate("y", n_particles, backend);
-    z_.allocate("z", n_particles, backend);
+    x_.allocate("x", n_particles);
+    y_.allocate("y", n_particles);
+    z_.allocate("z", n_particles);
 
-    mx_.allocate("mx", n_particles, backend);
-    my_.allocate("my", n_particles, backend);
-    mz_.allocate("mz", n_particles, backend);
+    mx_.allocate("mx", n_particles);
+    my_.allocate("my", n_particles);
+    mz_.allocate("mz", n_particles);
 
-    weight_.allocate("w", n_particles, backend);
+    weight_.allocate("w", n_particles);
 
     // gamma_inv_.allocate("gamma_inv", n_particles);
 
-    Ex_.allocate("Ex", n_particles, backend);
-    Ey_.allocate("Ey", n_particles, backend);
-    Ez_.allocate("Ez", n_particles, backend);
+    Ex_.allocate("Ex", n_particles);
+    Ey_.allocate("Ey", n_particles);
+    Ez_.allocate("Ez", n_particles);
 
-    Bx_.allocate("Bx", n_particles, backend);
-    By_.allocate("By", n_particles, backend);
-    Bz_.allocate("Bz", n_particles, backend);
+    Bx_.allocate("Bx", n_particles);
+    By_.allocate("By", n_particles);
+    Bz_.allocate("Bz", n_particles);
   }
 
   // __________________________________________________________________________
@@ -290,7 +289,7 @@ public:
   //
   //! \brief Return the total kinetic energy for this particle species
   // __________________________________________________________________________
-  template <class T_space> T get_kinetic_energy(T_space space) {
+  template <class T_space> T get_kinetic_energy(T_space) {
 
     T kinetic_energy = 0;
 
@@ -345,7 +344,7 @@ public:
     Bx_.sync(from, to);
     By_.sync(from, to);
     Bz_.sync(from, to);
-  };
+  }
 
   // __________________________________________________________________________
   //

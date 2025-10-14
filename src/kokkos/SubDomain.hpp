@@ -10,7 +10,6 @@
 
 #include <vector>
 
-#include "Backend.hpp"
 #include "Diagnotics.hpp"
 #include "Operators.hpp"
 #include "Params.hpp"
@@ -31,13 +30,13 @@ public:
   //! \brief Alloc memory to store all the patch
   //! \param[in] params global parameters
   // ______________________________________________________
-  void allocate(Params &params, Backend &backend) {
+  void allocate(Params &params) {
 
     std::cout << params.seperator(50) << std::endl << std::endl;
     std::cout << " Initialization" << std::endl << std::endl;
 
     // Allocate global fields
-    em_.allocate(params, backend);
+    em_.allocate(params);
 
     const double memory_consumption =
       (em_.Ex_m.size() + em_.Ey_m.size() + em_.Ez_m.size() + em_.Bx_m.size() + em_.By_m.size() +
@@ -54,7 +53,7 @@ public:
         for (int k = 0; k < params.nz_patch; k++) {
           int idx = i * params.nz_patch * params.ny_patch + j * params.nz_patch + k;
           // Memory allocate for all particles and local fields
-          patches_[idx].allocate(params, backend, i, j, k);
+          patches_[idx].allocate(params, i, j, k);
 
           // Particles position and momentum initialization
           patches_[idx].initialize_particles(params);
@@ -69,7 +68,7 @@ public:
                 << "\n"
                 << std::endl;
 
-      for (int ip = 0; ip < patches_.size(); ip++) {
+      for (size_t ip = 0; ip < patches_.size(); ip++) {
         operators::interpolate(em_, patches_[ip]);
         operators::push_momentum(patches_[ip], -0.5 * params.dt);
       }
@@ -77,10 +76,10 @@ public:
 
     // For each species, print :
     // - total number of particles
-    for (auto is = 0; is < params.species_names_.size(); ++is) {
+    for (size_t is = 0; is < params.species_names_.size(); ++is) {
       unsigned int total_number_of_particles = 0;
       double total_particle_energy           = 0;
-      for (auto idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
+      for (size_t idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
         total_number_of_particles += patches_[idx_patch].particles_m[is].size();
         total_particle_energy +=
           patches_[idx_patch].particles_m[is].get_kinetic_energy(minipic::host);
@@ -145,8 +144,8 @@ public:
     double sum_host[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     static const std::string vector_name[13] =
       {"weight", "x", "y", "z", "mx", "my", "mz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
-    for (int ip = 0; ip < patches_.size(); ip++) {
-      for (auto is = 0; is < params.species_names_.size(); ++is) {
+    for (size_t ip = 0; ip < patches_.size(); ip++) {
+      for (size_t is = 0; is < params.species_names_.size(); ++is) {
 
         sum_host[0] += patches_[ip].particles_m[is].weight_.sum(1, minipic::host);
         sum_host[1] += patches_[ip].particles_m[is].x_.sum(1, minipic::host);
@@ -177,12 +176,6 @@ public:
         sum_device[12] += patches_[ip].particles_m[is].Bz_.sum(1, minipic::device);
       }
     }
-    // std::cout << std::endl;
-    // std::cout << " -------------------------------- |" << std::endl;
-    // std::cout << " Check sum for particles          |" << std::endl;
-    // std::cout << " -------------------------------- |" << std::endl;
-    // std::cout << " vector | Host       | Device     |" << std::endl;
-    // std::cout << " -------------------------------- |" << std::endl;
 
     std::cout << std::endl;
     std::cout << " -------------------------------- |" << std::endl;
@@ -202,60 +195,42 @@ public:
   //
   //! \brief Perform a single PIC iteration
   //! \param[in] Params&  global parameters
-  //! \param[in] Timers&  timers
   //! \param[in] int it iteration number
   // ______________________________________________________________________________
-  void iterate(Params &params, Timers &timers, Backend &backend, int it) {
+  void iterate(Params &params, int it) {
 
     if (params.current_projection || params.n_particles > 0) {
 
       DEBUG("  -> start reset current");
 
-      timers.start(timers.reset_current);
-      
-
       em_.reset_currents(minipic::device);
-
-      timers.stop(timers.reset_current);
-      
 
       DEBUG("  -> stop reset current");
     }
 
-    for (int idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
+    for (size_t idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
 
       // Interpolate from global field to particles in patch
-      timers.start(timers.interpolate, idx_patch);
-      
-
       DEBUG("  -> start interpolate for patch " << idx_patch);
+
       operators::interpolate(em_, patches_[idx_patch]);
 
       DEBUG("  -> stop interpolate");
-      timers.stop(timers.interpolate, idx_patch);
-      
 
       // Push all particles in patch
-      timers.start(timers.push, idx_patch);
-      
-
       DEBUG("  -> start push for patch " << idx_patch);
+
       operators::push(patches_[idx_patch], params.dt);
+
       DEBUG("  -> stop push");
 
-      timers.stop(timers.push, idx_patch);
-      
-
       // Do boundary conditions on global domain
-      timers.start(timers.pushBC, idx_patch);
-      
-
       DEBUG("  -> Patch " << idx_patch << ": start pushBC");
+
       operators::pushBC(params, patches_[idx_patch]);
+
       DEBUG("  -> stop pushBC");
 
-      timers.stop(timers.pushBC, idx_patch);
-      
 
 #if defined(__MINIPIC_DEBUG__)
       // check particles
@@ -272,9 +247,6 @@ public:
       // Projection in local field
       if (params.current_projection) {
 
-        timers.start(timers.projection, idx_patch);
-        
-
         // #if defined(__MINIPIC_KOKKOS__)
 
         // Projection directly in the global grid
@@ -282,61 +254,24 @@ public:
 
         // #else
 
-        DEBUG("  -> Patch " << idx_patch << ": start project");
         // Project in buffers local to the patches
+        DEBUG("  -> Patch " << idx_patch << ": start project");
+        
         operators::project(params, patches_[idx_patch]);
 
         DEBUG("  -> stop project");
 
         // #endif
-
-        timers.stop(timers.projection, idx_patch);
-        
       }
 
-      // __________________________________________________________________
-      // Identify and copy in buffers particles which leave the patch
-
-      timers.start(timers.id_parts_to_move, idx_patch);
-      
-
-      DEBUG("  -> Patch " << idx_patch << ": start identify particles to move");
-
-      if (patches_.size() > 1) {
-        operators::identify_particles_to_move(params, patches_[idx_patch], backend);
-      }
-
-      DEBUG("  -> Patch " << idx_patch << ": stop identify particles to move");
-
-      timers.stop(timers.id_parts_to_move, idx_patch);
-      
     } // end for patches
-
-    // __________________________________________________________________
-    // Exchange particles between patches
-    if (patches_.size() > 1) {
-      for (int idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
-        timers.start(timers.exchange);
-
-        DEBUG("  -> Patch " << idx_patch << ": exchange");
-
-        operators::exchange_particles(params, patches_, idx_patch);
-
-        DEBUG("  -> Patch " << idx_patch << ": end exchange");
-
-        timers.stop(timers.exchange);
-      }
-    }
 
     // __________________________________________________________________
     // Sum all species contribution in the local and global current grids
 
     if (params.current_projection || params.n_particles > 0) {
 
-      for (int idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
-
-        timers.start(timers.current_local_reduc);
-        
+      for (size_t idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
 
         // Projection directly in the global grid
         // subdomain.patches_[idx_patch].project(param, em_);
@@ -344,42 +279,32 @@ public:
         // Projection in local field
         // patches_[idx_patch].project(params);
 
-        DEBUG("  -> Patch " << idx_patch << ": start reduction");
         // Sum all species contribution in the local fields
+        DEBUG("  -> Patch " << idx_patch << ": start reduction");
+
         operators::reduc_current(patches_[idx_patch]);
 
         DEBUG("  -> Patch " << idx_patch << ": end reduction");
 
-        timers.stop(timers.current_local_reduc);
-        
       }
 
-      timers.start(timers.current_global_reduc);
-
-      for (int idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
-
+      for (size_t idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
         
-
-        DEBUG("  -> Patch " << idx_patch << ": start local 2 global");
         // Copy all local fields in the global fields
+        DEBUG("  -> Patch " << idx_patch << ": start local 2 global");
+
         operators::local2global(em_, patches_[idx_patch]);
+
         DEBUG("  -> Patch " << idx_patch << ": end local 2 global");
 
-        
       }
-
-      timers.stop(timers.current_global_reduc);
-
-      timers.start(timers.currentBC);
-      
 
       // Perform the boundary conditions for current
       DEBUG("  -> start current BC")
-      operators::currentBC(params, em_);
-      DEBUG("  -> stop current BC")
 
-      timers.stop(timers.currentBC);
-      
+      operators::currentBC(params, em_);
+
+      DEBUG("  -> stop current BC")
 
     } // end if current projection
 
@@ -388,11 +313,8 @@ public:
 
     if (params.maxwell_solver) {
 
-      timers.start(timers.maxwell_solver);
-      
-
       // Generate a laser field with an antenna
-      for (auto iantenna = 0; iantenna < params.antenna_profiles_.size(); iantenna++) {
+      for (size_t iantenna = 0; iantenna < params.antenna_profiles_.size(); iantenna++) {
         operators::antenna(params,
                            em_,
                            params.antenna_profiles_[iantenna],
@@ -400,29 +322,19 @@ public:
                            it * params.dt);
       }
 
-      timers.stop(timers.maxwell_solver);
-
       // Solve the Maxwell equation
-
-      timers.start(timers.maxwell_solver);
-
       DEBUG("  -> start solve Maxwell")
+
       operators::solve_maxwell(params, em_);
+
       DEBUG("  -> stop solve Maxwell")
 
-      timers.stop(timers.maxwell_solver);
-
-      timers.start(timers.maxwellBC);
-
+      // Boundary conditions on EM fields
       DEBUG("  -> start solve BC")
 
-      // Boundary conditions on EM fields
       operators::solveBC(params, em_);
 
       DEBUG("  -> end solve BC")
-      timers.stop(timers.maxwellBC);
-
-      
 
     } // end test params.maxwell_solver
   }
@@ -433,20 +345,17 @@ public:
   //! \param[in] Timers&  timers
   //! \param[in] int it iteration number
   // ________________________________________________________________
-  void diagnostics(Params &params, Timers &timers, Backend &backend, int it) {
+  void diagnostics(Params &params, int it) {
 
     if (params.no_diagnostics_at_init and it == 0) {
       return;
     }
 
-    
-    timers.start(timers.diags_sync);
-
     // __________________________________________________________________
     // Determine species to copy from device to host
 
-    bool need_species[params.get_species_number()];
-    for (auto is = 0; is < params.get_species_number(); ++is) {
+    bool *need_species = new bool[params.get_species_number()];
+    for (size_t is = 0; is < params.get_species_number(); ++is) {
       need_species[is] = false;
     }
 
@@ -462,29 +371,27 @@ public:
     if ((params.particle_cloud_period < params.n_it) &&
         (!(it % params.particle_cloud_period) or (it == 0))) {
 
-      for (auto is = 0; is < params.get_species_number(); ++is) {
+      for (size_t is = 0; is < params.get_species_number(); ++is) {
         need_species[is] = true;
       }
     }
 
-    for (auto is = 0; is < params.get_species_number(); ++is) {
+    for (size_t is = 0; is < params.get_species_number(); ++is) {
       if (need_species[is]) {
-        for (auto ipatch = 0; ipatch < patches_.size(); ++ipatch) {
+        for (size_t ipatch = 0; ipatch < patches_.size(); ++ipatch) {
           patches_[ipatch].particles_m[is].sync(minipic::device, minipic::host);
         }
       }
     }
 
+    delete[] need_species;
+
     if (!(it % params.field_diagnostics_period)) {
       em_.sync(minipic::device, minipic::host);
     }
 
-    timers.stop(timers.diags_sync);
-
     // __________________________________________________________________
     // Start diagnostics
-
-    timers.start(timers.diags_binning);
 
     // Particle binning
     for (auto particle_binning : params.particle_binning_properties_) {
@@ -512,21 +419,15 @@ public:
       }
     } // end loop on particle_binning_properties_
 
-    timers.stop(timers.diags_binning);
-    timers.start(timers.diags_cloud);
-
     // Particle Clouds
     if ((params.particle_cloud_period < params.n_it) &&
         (!(it % params.particle_cloud_period) or (it == 0))) {
 
-      for (auto is = 0; is < params.get_species_number(); ++is) {
+      for (size_t is = 0; is < params.get_species_number(); ++is) {
 
         Diags::particle_cloud("cloud", params, patches_, is, it, params.particle_cloud_format);
       }
     }
-
-    timers.stop(timers.diags_cloud);
-    timers.start(timers.diags_field);
 
     // Field diagnostics
     if (!(it % params.field_diagnostics_period)) {
@@ -534,12 +435,9 @@ public:
       Diags::fields(params, em_, it, params.field_diagnostics_format);
     }
 
-    timers.stop(timers.diags_field);
-    timers.start(timers.diags_scalar);
-
     // Scalars diagnostics
     if (!(it % params.scalar_diagnostics_period)) {
-      for (auto is = 0; is < params.get_species_number(); ++is) {
+      for (size_t is = 0; is < params.get_species_number(); ++is) {
 
         Diags::scalars(params, patches_, is, it);
       }
@@ -552,9 +450,6 @@ public:
       }
     }
 
-    timers.stop(timers.diags_scalar);
-    
-
   } // end diagnostics
 
   // __________________________________________________________________
@@ -563,7 +458,7 @@ public:
   // __________________________________________________________________
   unsigned int get_total_number_of_particles() {
     unsigned int total_number_of_particles = 0;
-    for (auto idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
+    for (size_t idx_patch = 0; idx_patch < patches_.size(); idx_patch++) {
       total_number_of_particles += patches_[idx_patch].get_total_number_of_particles();
     }
     return total_number_of_particles;

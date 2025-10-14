@@ -56,7 +56,7 @@
 //
 //! \brief Alloc memory for all members and init all at null
 // ________________________________________________________________________
-void Patch::allocate(Params &param, Backend &backend, const int i, const int j, const int k) {
+void Patch::allocate(Params &param, const int i, const int j, const int k) {
   // Store input
   n_species_m = param.get_species_number();
 
@@ -126,8 +126,7 @@ void Patch::allocate(Params &param, Backend &backend, const int i, const int j, 
                              param.mass_[is],
                              param.temp_[is],
                              n_particles,
-                             param.inv_cell_volume,
-                             backend);
+                             param.inv_cell_volume);
 
     // Alloc a tag for each particle, to tag particles which leave the patch and init it at false
     // masks_m[is].resize(n_particles, 0);
@@ -140,17 +139,16 @@ void Patch::allocate(Params &param, Backend &backend, const int i, const int j, 
                                                 param.mass_[is],
                                                 param.temp_[is],
                                                 0,
-                                                param.inv_cell_volume,
-                                                backend);
+                                                param.inv_cell_volume);
 
       particles_to_move_m[is][ibuffer].with_electromagnetic_fields_ = false;
     }
 
     // Alloc local fields, one for each species
     // Must have 2 ghost cells in the primal direction for the projection
-    vec_Jx_m[is].allocate(nx_d_m, ny_p_m + 2, nz_p_m + 2, backend, 0.0, 1, 0, 0, "Jx");
-    vec_Jy_m[is].allocate(nx_p_m + 2, ny_d_m, nz_p_m + 2, backend, 0.0, 0, 1, 0, "Jy");
-    vec_Jz_m[is].allocate(nx_p_m + 2, ny_p_m + 2, nz_d_m, backend, 0.0, 0, 0, 1, "Jz");
+    vec_Jx_m[is].allocate(nx_d_m, ny_p_m + 2, nz_p_m + 2, 0.0, 1, 0, 0, "Jx");
+    vec_Jy_m[is].allocate(nx_p_m + 2, ny_d_m, nz_p_m + 2, 0.0, 0, 1, 0, "Jy");
+    vec_Jz_m[is].allocate(nx_p_m + 2, ny_p_m + 2, nz_d_m, 0.0, 0, 0, 1, "Jz");
 
   }
 

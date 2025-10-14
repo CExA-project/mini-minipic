@@ -109,7 +109,7 @@ public:
   //
   //! \brief Initialize and allocate properties for the patch
   // _____________________________________________________________
-  void allocate(Params &param, Backend &backend, const int i, const int j, const int k);
+  void allocate(Params &param, const int i, const int j, const int k);
 
   // _____________________________________________________________
   //

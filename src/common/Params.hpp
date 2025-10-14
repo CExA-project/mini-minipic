@@ -187,9 +187,6 @@ public:
   //! Random number
   int seed = 0;
 
-  //! Number of threads
-  int number_of_threads;
-
   // ____________________________________________________________
   // Initial Electric and magnetic field values
 

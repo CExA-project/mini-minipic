@@ -48,48 +48,11 @@ public:
   const Section pic_iteration  = Section{2, "pic_iteration"};
   const Section diags          = Section{3, "all diags"};
 
-  const Section interpolate          = Section{4, "interpolate"};
-  const Section push                 = Section{5, "push"};
-  const Section pushBC               = Section{6, "pushBC"};
-  const Section id_parts_to_move     = Section{7, "id_parts_to_move"};
-  const Section exchange             = Section{8, "exchange"};
-  const Section reset_current        = Section{9, "reset_current"};
-  const Section projection           = Section{10, "projection"};
-  const Section current_local_reduc  = Section{11, "current_local_reduc"};
-  const Section current_global_reduc = Section{12, "current_global_reduc"};
-  const Section currentBC            = Section{13, "currentBC"};
-  const Section maxwell_solver       = Section{14, "maxwell_solver"};
-  const Section maxwellBC            = Section{15, "maxwellBC"};
-  const Section diags_sync           = Section{16, "diags_sync"};
-  const Section diags_binning        = Section{17, "diags_binning"};
-  const Section diags_cloud          = Section{18, "diags_cloud"};
-  const Section diags_scalar         = Section{19, "diags_scalar"};
-  const Section diags_field          = Section{20, "diags_field"};
-  const Section imbalance            = Section{21, "imbalance"};
-
   // Vector of timers
   std::vector<Section> sections = {initialization,
                                    main_loop,
                                    pic_iteration,
-                                   diags,
-                                   interpolate,
-                                   push,
-                                   pushBC,
-                                   id_parts_to_move,
-                                   exchange,
-                                   reset_current,
-                                   projection,
-                                   current_local_reduc,
-                                   current_global_reduc,
-                                   currentBC,
-                                   maxwell_solver,
-                                   maxwellBC,
-                                   diags_sync,
-                                   diags_binning,
-                                   diags_cloud,
-                                   diags_scalar,
-                                   diags_field,
-                                   imbalance};
+                                   diags};
 
   // String Buffer to store the timers
   std::stringstream timers_buffer;
@@ -122,7 +85,6 @@ public:
     file << "{\n";
     file << "  \"parameters\" : {\n";
     file << "    \"number_of_patches\" : " << N_patches << ",\n";
-    file << "    \"number_of_threads\" : " << params.number_of_threads << ",\n";
     file << "    \"iterations\" : " << params.n_it << ",\n";
     file << "    \"save_timers_period\" : " << params.save_timers_period << ",\n";
     file << "    \"save_timers_start\" : " << params.save_timers_start << "\n";
@@ -213,71 +175,50 @@ public:
   // _______________________________________________________________
   //
   //! \brief Print all timers
-  //! \param  params : parameters of the simulation
   // _______________________________________________________________
-  void print(Params params) {
+  void print() {
     double percentage;
 
     const double initialization_time = accumulated_times[first_index(initialization)];
     const double main_loop_time      = accumulated_times[first_index(main_loop)];
     const double diags_time          = accumulated_times[first_index(diags)];
-    const auto pic_iteration_time    = accumulated_times[first_index(pic_iteration)];
+    const double pic_iteration_time  = accumulated_times[first_index(pic_iteration)];
+
+    double total_time = initialization_time + main_loop_time;
 
     printf(" ---------------------------------------------- |\n");
-    printf(" Large timers                                   |\n");
+    printf(" Global timers                                  |\n");
     printf(" ---------------------------------------------- |\n");
     printf("            code part |  time (s)  | percentage |\n");
     printf(" ---------------------|------------|----------- |\n");
 
-    percentage = initialization_time / (initialization_time + main_loop_time) * 100;
+    percentage = initialization_time / total_time * 100;
     printf("%21s |%11.6lf |%9.2lf %% |\n",
            initialization.name.c_str(),
            initialization_time,
            percentage);
 
-    percentage = main_loop_time / (initialization_time + main_loop_time) * 100;
+    percentage = main_loop_time / total_time * 100;
     printf("%21s |%11.6lf |%9.2lf %% |\n", main_loop.name.c_str(), main_loop_time, percentage);
 
-    percentage = pic_iteration_time / (initialization_time + main_loop_time) * 100;
-    const string comp_without_diags_name = "PIC iter (w/o diags)";
-    printf("%21s |%11.6lf |%9.2lf %% |\n",
-           comp_without_diags_name.c_str(),
-           pic_iteration_time,
-           percentage);
-
-    percentage = diags_time / (initialization_time + main_loop_time) * 100;
-    printf("%21s |%11.6lf |%9.2lf %% |\n", diags.name.c_str(), diags_time, percentage);
-
     printf(" ---------------------------------------------- |\n");
-    printf(" Detailed timers                                |\n");
+    printf(" Main loop                                      |\n");
     printf(" ---------------------------------------------- |\n");
     printf("            code part |  time (s)  | percentage |\n");
     printf(" ---------------------|------------|----------- |\n");
 
-    mini_float coverage = 0;
+    total_time = pic_iteration_time + diags_time;
+    percentage = pic_iteration_time / total_time * 100;
+    const string pic_iterations_name = "PIC iterations";
+    printf("%21s |%11.6lf |%9.2lf %% |\n",
+           pic_iterations_name.c_str(),
+           pic_iteration_time,
+           percentage);
 
-    for (size_t itimer = 4; itimer < sections.size(); itimer++) {
+    percentage = diags_time / total_time * 100;
+    const string diags_name = "Diagnostics";
+    printf("%21s |%11.6lf |%9.2lf %% |\n", diags_name.c_str(), diags_time, percentage);
 
-      double global_time = accumulated_times[first_index(sections[itimer])];
-      double thread_time = 0;
-
-      for (unsigned int i_patch = 0; i_patch < params.N_patches; i_patch++) {
-        const int idx = first_index(sections[itimer]) + i_patch + 1;
-        thread_time += accumulated_times[idx];
-      }
-
-      thread_time /= params.number_of_threads;
-
-      const double total_time = global_time + thread_time;
-
-      coverage += total_time;
-
-      percentage = total_time / (main_loop_time) * 100;
-      printf("%21s |%11.6lf |%9.2lf %% |\n", sections[itimer].name.c_str(), total_time, percentage);
-    }
-
-    printf(" ------------------------------------ \n");
-    printf(" Total coverage : %9.2lf %% \n", coverage / (main_loop_time) * 100);
   }
 
   // _______________________________________________________________
@@ -300,8 +241,7 @@ public:
   //! \details The file is named "timers.json" and has the following format :
   //! {
   //!   "parameters" : {
-  //!       "number_of_patches" : N_patches,
-  //!       "number_of_threads" : number_of_threads
+  //!       "number_of_patches" : N_patches
   //!   },
   //!   "initilization" : [global],
   //!   "0" : {

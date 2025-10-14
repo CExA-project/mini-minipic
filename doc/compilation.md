@@ -67,6 +67,11 @@ make
 
 When using the submodule you can pass directly the Kokkos options. See the [Kokkos CMake options documentation](https://kokkos.org/kokkos-core-wiki/get-started/configuration-guide.html).
 
+After cloning the repository, be sure submodules are initialized:
+```bash
+ git submodule update --init
+```
+
 - Basic compilation (defaults to serial backend)
 ```bash
 cmake ../ 

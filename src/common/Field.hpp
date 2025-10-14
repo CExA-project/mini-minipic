@@ -10,7 +10,6 @@
 #ifndef FIELD_H
 #define FIELD_H
 
-#include "Backend.hpp"
 #include "Headers.hpp"
 #include <cmath>
 #include <iostream>
@@ -41,8 +40,8 @@ public:
 
 #if defined(__MINIPIC_KOKKOS__)
 
-  Kokkos::View<T ***, Kokkos::DefaultExecutionSpace::memory_space> data_m;
-  decltype(create_mirror_view(data_m)) data_m_h;
+  Kokkos::View<T ***> data_m;
+  typename decltype(data_m)::host_mirror_type data_m_h;
 
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
 
@@ -65,7 +64,6 @@ public:
   //! \param nx number of grid points in the x direction
   //! \param ny number of grid points in the y direction
   //! \param nz number of grid points in the z direction
-  //! \param backend backend to use for initialization and memory allocation
   //! \param v default value to fill the field
   //! \param dual_x primal or dual in the x direction
   //! \param dual_y primal or dual in the y direction
@@ -75,13 +73,12 @@ public:
   Field(const int nx,
         const int ny,
         const int nz,
-        Backend &backend,
         const T v,
         const int dual_x,
         const int dual_y,
         const int dual_z,
         const std::string name) {
-    allocate(nx, ny, nz, backend, v, dual_x, dual_y, dual_z, name);
+    allocate(nx, ny, nz, v, dual_x, dual_y, dual_z, name);
   }
 
   // _________________________________________________________________________________________
@@ -181,7 +178,6 @@ public:
   void allocate(const int nx,
                 const int ny,
                 const int nz,
-                Backend &backend,
                 const T v        = 0,
                 const int dual_x = 0,
                 const int dual_y = 0,
@@ -204,7 +200,7 @@ public:
     }
 
 #if defined(__MINIPIC_KOKKOS__)
-    data_m = Kokkos::View<T ***, Kokkos::DefaultExecutionSpace::memory_space>(name, nx, ny, nz);
+    data_m = Kokkos::View<T ***>(name, nx, ny, nz);
     data_m_h = create_mirror_view(data_m);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     data_m = Kokkos::View<T ***, Kokkos::SharedSpace>(name, nx, ny, nz);
@@ -221,9 +217,8 @@ public:
   //! \param nx number of grid points in the x direction
   //! \param ny number of grid points in the y direction
   //! \param nz number of grid points in the z direction
-  //! \param v default value
   // _________________________________________________________________________________________
-  void resize(const int nx, const int ny, const int nz, const T v = 0) {
+  void resize(const int nx, const int ny, const int nz) {
     nx_m  = nx;
     ny_m  = ny;
     nz_m  = nz;
@@ -244,7 +239,7 @@ public:
   //! \param v value to set
   //! \param space space where to set the value
   // _________________________________________________________________________________________
-  template <class T_space> void fill(const mini_float v, const T_space space) {
+  template <class T_space> void fill(const mini_float v, const T_space) {
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
 #if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
@@ -291,7 +286,7 @@ public:
   //! \tparam T_space execution space
   //! \return return pointer to the first element of the data
   // _________________________________________________________________________________________
-  template <class T_space = minipic::Host> T *get_raw_pointer(const T_space space) {
+  template <class T_space = minipic::Host> T *get_raw_pointer(const T_space) {
 
     static_assert(std::is_same<T_space, minipic::Host>::value ||
                     std::is_same<T_space, minipic::Device>::value,
@@ -314,7 +309,7 @@ public:
   //
   //! \brief output the sum of data with power power
   // ____________________________________________________________
-  template <class T_space> T sum(const int power, T_space space) const {
+  template <class T_space> T sum(const int power, T_space) const {
     T sum = 0;
 
     // ---> Host case
@@ -415,7 +410,7 @@ public:
   //
   //! \brief Sync Host <-> Device
   // _________________________________________________________________________________________
-  template <class T_from, class T_to> void sync(const T_from from, const T_to to) {
+  template <class T_from, class T_to> void sync(const T_from, const T_to) {
     // ---> Host to Device
     if constexpr (std::is_same<T_from, minipic::Host>::value) {
 #if defined(__MINIPIC_KOKKOS__)
@@ -435,9 +430,8 @@ public:
 
 #if defined(__MINIPIC_KOKKOS__)
 
-using device_field_t = Kokkos::View<mini_float ***, Kokkos::DefaultExecutionSpace::memory_space>;
-//using field_t        = Kokkos::View<mini_float ***, Kokkos::DefaultHostExecutionSpace::memory_space>;
-using field_t        = decltype(create_mirror_view(device_field_t{}));
+using device_field_t = Kokkos::View<mini_float ***>;
+using field_t        = typename device_field_t::host_mirror_type;
 
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
 

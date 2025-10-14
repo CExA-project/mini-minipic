@@ -1340,28 +1340,6 @@ auto solveBC(Params &params, ElectroMagn &em) -> void {
 
 // ______________________________________________________
 //
-//! \brief This function tags particles which leave the patch,
-//!        then, put them in  buffers according to the communication direction
-//!        and finally delete them from the patch
-//! \param[in] Params & params - global constant parameters
-//! \param[in] Patch & patch - current patch
-// ______________________________________________________
-void identify_particles_to_move(Params &params, Patch &patch, Backend &backend) {
-
-}
-
-// ___________________________________________________________
-//
-//! \brief Get the particles from neighbors
-//! \param[in] params constant global parameters
-//! \param[in] vec_patch vector of all patches
-// ___________________________________________________________
-auto exchange_particles(Params &params, std::vector<Patch> &vec_patch, int id_patch) -> void {
-
-}
-
-// ______________________________________________________
-//
 //! \brief Sum all species local current grids in local grid
 //! \param[in] patch  current patch to handle
 // ______________________________________________________
@@ -1496,8 +1474,8 @@ auto antenna(Params &params,
   const double yfs = 0.5 * params.Ly + params.inf_y;
   const double zfs = 0.5 * params.Lz + params.inf_z;
 
-  for (unsigned int iy = 0; iy < J->ny_m; ++iy) {
-    for (unsigned int iz = 0; iz < J->nz_m; ++iz) {
+  for (int iy = 0; iy < J->ny_m; ++iy) {
+    for (int iz = 0; iz < J->nz_m; ++iz) {
 
       const double y = (iy - J->dual_y_m * 0.5) * params.dy + params.inf_y - yfs;
       const double z = (iz - J->dual_z_m * 0.5) * params.dz + params.inf_z - zfs;
@@ -1509,22 +1487,6 @@ auto antenna(Params &params,
   em.Jz_m.sync(minipic::host, minipic::device);
 
 } // end antenna
-
-// _____________________________________________________________________
-//
-//! \brief Boundaries condition on the particles, periodic
-//! or reflect the particles which leave the domain
-//
-//! \param[in] Params & params - constant global simulation parameters
-//! \param[in] Patch & patch - current patch
-//! \param[in] dt time step to use for the pusher
-// _____________________________________________________________________
-auto imbalance_operator(Params &params,
-                        Patch &patch,
-                        int it,
-                        std::function<double(double, double, double, double)> func_weight) -> void {
-
-} // end function
 
 } // end namespace operators
 

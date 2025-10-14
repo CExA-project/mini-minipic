@@ -249,12 +249,16 @@ void Params::read_from_command_line_arguments(int argc, char *argv[]) {
         iarg++;
       } else if (key.find("threads") != std::string::npos) {
         iarg++;
+      } else if (key.find("kokkos") != std::string::npos) {
+        iarg++;
+        // Skip next arg if not a flag
+        if (iarg < argc && (argv[iarg][0] != '-')) {
+          iarg++;
+        }
       } else {
         std::cerr << " Argument " << argv[iarg] << " is not recognized." << std::endl;
         std::cerr << " Use argument `-h` for help." << std::endl;
-        // std::_Exit(EXIT_FAILURE);
         std::raise(SIGABRT);
-        iarg++;
       }
     }
   }

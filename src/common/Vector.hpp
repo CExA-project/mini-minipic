@@ -10,7 +10,6 @@
 #ifndef VECTOR_H
 #define VECTOR_H
 
-#include "Backend.hpp"
 #include "Headers.hpp"
 
 // ______________________________________________________________________
@@ -25,8 +24,8 @@ public:
 
   // Main data
 #if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-  Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space> data_;
-  decltype(Kokkos::create_mirror_view(data_)) data_h_;
+  Kokkos::View<T *> data_;
+  typename decltype(data_)::host_mirror_type data_h_;
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
   Kokkos::View<T *, Kokkos::SharedSpace> data_;
 #endif
@@ -36,7 +35,7 @@ public:
   //! \brief constructors
   // ______________________________________________________________________
   Vector() : size_(0) {}
-  Vector(unsigned int size, Backend &backend) { allocate("", backend, size); }
+  Vector(unsigned int size) { allocate("", size); }
 
   // ______________________________________________________________________
   //
@@ -44,8 +43,8 @@ public:
   //! \param[in] size allocation size
   //! \param[in] v default value
   // ______________________________________________________________________
-  Vector(unsigned int size, T v, Backend &backend) {
-    allocate("", size, backend);
+  Vector(unsigned int size, T v) {
+    allocate("", size);
     fill(v, minipic::host);
     fill(v, minipic::device);
   }
@@ -62,10 +61,10 @@ public:
   //
   //! \brief allocate the data_ object
   // ______________________________________________________________________
-  void allocate(std::string name, unsigned int size, Backend &backend) {
+  void allocate(std::string name, unsigned int size) {
     size_ = size;
-#if defined(__MINIPIC_KOKKOS__)
-    data_ = Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space>(name, size);
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+    data_ = Kokkos::View<T *>(name, size);
     data_h_ = Kokkos::create_mirror_view(data_);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     data_ = Kokkos::View<T *, Kokkos::SharedSpace>(name, size);
@@ -91,7 +90,7 @@ public:
   //! \return Host data accessor (if not device, point to the host data)
   // ______________________________________________________________________
   INLINE T &operator()(const int i) {
-#if defined(__MINIPIC_KOKKOS__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
     return data_h_(i);
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     return data_(i);
@@ -117,7 +116,7 @@ public:
   //! \param[in] space where to keep the data when resizing (must be minipic::host or
   //! minipic::device)
   // ______________________________________________________________________
-  template <class T_space> T *get_raw_pointer(const T_space space) {
+  template <class T_space> T *get_raw_pointer(const T_space) {
 
     // Check that T_Space of Class Host or Device
     static_assert(std::is_same<T_space, minipic::Host>::value ||
@@ -155,17 +154,21 @@ public:
   //! \param[in] space where to keep the data when resizing (must be minipic::host or
   //! minipic::device)
   // ______________________________________________________________________
-  template <class T_space> void resize(const unsigned int new_size, const T_space space) {
+  template <class T_space> void resize(const unsigned int new_size, const T_space) {
 
     // Check that T_Space of Class Host or Device
     static_assert(std::is_same<T_space, minipic::Host>::value ||
                     std::is_same<T_space, minipic::Device>::value,
                   "Must be minipic::host or minipic::device");
 
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+    Kokkos::resize(data_, new_size);
+    Kokkos::resize(data_h_, new_size);
+#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
     Kokkos::resize(data_, new_size);
     size_ = new_size;
-  }
-
+#endif
+}
   // ______________________________________________________________________
   //
   //! \brief resize the vector to the new size
@@ -201,7 +204,7 @@ public:
   //
   //! \brief fill the vector with the given value
   // ______________________________________________________________________
-  template <class T_space> void fill(const T v, const T_space space) {
+  template <class T_space> void fill(const T v, const T_space) {
     // Check that T_Space of Class Host or Device
     static_assert(std::is_same<T_space, minipic::Host>::value ||
                     std::is_same<T_space, minipic::Device>::value,
@@ -209,7 +212,7 @@ public:
 
     // Host
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
       // Fill on host
       for (auto i = 0; i < size_; ++i) {
         data_h_(i) = v;
@@ -256,13 +259,13 @@ public:
   //! \param[in] power power of the sum
   //! \param[in] space where to perform the reduction (host or device)
   // _________________________________________________________
-  template <class T_space> T sum(const int power, T_space space) {
+  template <class T_space> T sum(const int power, T_space) {
     T sum = 0;
 
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
 
       typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
 
@@ -279,7 +282,7 @@ public:
 
       typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
 
-      auto& data_ref = data_
+      auto& data_ref = data_;
       Kokkos::parallel_reduce(
         "sum",
         range_policy(0, size_),
@@ -293,7 +296,7 @@ public:
     } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
 
 #if defined(__MINIPIC_KOKKOS__)
-      typename Kokkos::View<T *, Kokkos::DefaultExecutionSpace::memory_space> view = data_;
+      typename Kokkos::View<T *> view = data_;
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
       typename Kokkos::View<T *, Kokkos::SharedSpace> view = data_;
 #endif
@@ -331,7 +334,7 @@ public:
     if constexpr (std::is_same<from, minipic::Host>::value &&
                   std::is_same<to, minipic::Device>::value) {
 
-#if defined(__MINIPIC_KOKKOS__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
       Kokkos::deep_copy(data_, data_h_);
 #endif
 
@@ -339,7 +342,7 @@ public:
     } else if constexpr (std::is_same<from, minipic::Device>::value &&
                          std::is_same<to, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS__)
+#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
       Kokkos::deep_copy(data_h_, data_);
 #endif
     }
@@ -352,7 +355,7 @@ public:
 #if defined(__MINIPIC_KOKKOS__)
 
 using vector_t        = Kokkos::View<mini_float *, Kokkos::DefaultHostExecutionSpace::memory_space>;
-using device_vector_t = Kokkos::View<mini_float *, Kokkos::DefaultExecutionSpace::memory_space>;
+using device_vector_t = Kokkos::View<mini_float *>;
 
 #elif defined(__MINIPIC_KOKKOS_UNIFIED__)
 

@@ -38,21 +38,10 @@ void setup(Params &params) {
   int ny_cells = static_cast<int>((params.sup_y - params.inf_y) / dy);
   int nz_cells = static_cast<int>((params.sup_z - params.inf_z) / dz);
 
-  // #if defined(__MINIPIC_KOKKOS__)
-
   // Number of patches
-  params.nx_patch = 4;
-  params.ny_patch = 4;
-  params.nz_patch = 4;
-
-  // #else
-
-  //   // Number of patches
-  //   params.nx_patch = 4;
-  //   params.ny_patch = 4;
-  //   params.nz_patch = 4;
-
-  // #endif
+  params.nx_patch = 1;
+  params.ny_patch = 1;
+  params.nz_patch = 1;
 
   // Cells per patch per direction
   params.nx_cells_by_patch = nx_cells / params.nx_patch;
