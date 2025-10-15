@@ -79,15 +79,9 @@ int main(int argc, char *argv[]) {
     // Initial diagnostics
     // ______________________________________________________
 
-    std::cerr << " diag start" << std::endl;
-
     timers.start(timers.diags);
-    std::cerr << " timer diag done" << std::endl;
     subdomain.diagnostics(params, 0);
-    std::cerr << " diag done" << std::endl;
     timers.stop(timers.diags);
-    std::cerr << " timer diag done" << std::endl;
-
 
     // ______________________________________________________
     //
