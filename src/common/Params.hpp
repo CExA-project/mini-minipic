@@ -569,45 +569,4 @@ public:
   //! \brief Print input parameters summary
   // _____________________________________________________
   void info();
-
-  // _____________________________________________________________
-  //
-  //! \brief Give the index patch topology from 3D indexes,
-  //!       -1 if out of domain
-  // _____________________________________________________________
-  INLINE int get_patch_index(int i, int j, int k) {
-
-    int ixp = i;
-    int iyp = j;
-    int izp = k;
-
-    // Periodic management of the topology
-    if (ixp < 0) {
-      ixp = nx_patch - 1;
-    } else if (ixp >= nx_patch) {
-      ixp = 0;
-    }
-
-    if (iyp < 0) {
-      iyp = ny_patch - 1;
-    } else if (iyp >= ny_patch) {
-      iyp = 0;
-    }
-
-    if (izp < 0) {
-      izp = nz_patch - 1;
-    } else if (izp >= nz_patch) {
-      izp = 0;
-    }
-
-    // Reflective management of the topology
-    // if(i<0 || i>=nx_patchs_m)
-    //   return -1;
-    // if(j<0 || j>=ny_patchs_m)
-    //   return -1;
-    // if(k<0 || k>=nz_patchs_m)
-    //   return -1;
-
-    return ixp * nz_patch * ny_patch + iyp * nz_patch + izp;
-  }
 };

@@ -16,10 +16,7 @@
 #include "SubDomain.hpp"
 
 // Load a setup
-#include "study_thermal.hpp"
-// #include "study_sorted.hpp"
-// #include "study_random.hpp"
-// #include"default_gpu.hpp"
+#include"default_gpu.hpp"
 
 //! Main function
 int main(int argc, char *argv[]) {
