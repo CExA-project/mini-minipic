@@ -14,7 +14,6 @@
 #include <vector>
 
 #include "Params.hpp"
-#include "Patch.hpp"
 
 namespace Diags {
 
@@ -175,7 +174,7 @@ void output_vtk_structured_grid(std::string file_name,
 // _____________________________________________________________________
 void particle_binning(std::string diag_name,
                       Params &params,
-                      std::vector<Patch> &patches,
+                      Particles<mini_float> &particles,
                       std::string projected_parameter,
                       std::vector<std::string> axis,
                       std::vector<int> n_cells,
@@ -252,38 +251,36 @@ void particle_binning(std::string diag_name,
         max_value[idim] = -1e9;
       }
 
-      for (size_t i_patch = 0; i_patch < patches.size(); ++i_patch) {
-        const unsigned int n_particles = patches[i_patch].particles_m[is].size();
+        const unsigned int n_particles = particles.size();
         for (unsigned int ip = 0; ip < n_particles; ip++) {
 
           mini_float value = 0.0;
 
           if (axis_code[idim] == 0) {
             value = sqrt(1 +
-                         patches[i_patch].particles_m[is].mx_h(ip) *
-                           patches[i_patch].particles_m[is].mx_h(ip) +
-                         patches[i_patch].particles_m[is].my_h(ip) *
-                           patches[i_patch].particles_m[is].my_h(ip) +
-                         patches[i_patch].particles_m[is].mz_h(ip) *
-                           patches[i_patch].particles_m[is].mz_h(ip));
+                         particles.mx_.h(ip) *
+                           particles.mx_.h(ip) +
+                         particles.my_.h(ip) *
+                           particles.my_.h(ip) +
+                         particles.mz_.h(ip) *
+                           particles.mz_.h(ip));
           } else if (axis_code[idim] == 1) {
-            value = patches[i_patch].particles_m[is].x_h(ip);
+            value = particles.x_.h(ip);
           } else if (axis_code[idim] == 2) {
-            value = patches[i_patch].particles_m[is].y_h(ip);
+            value = particles.y_.h(ip);
           } else if (axis_code[idim] == 3) {
-            value = patches[i_patch].particles_m[is].z_h(ip);
+            value = particles.z_.h(ip);
           } else if (axis_code[idim] == 4) {
-            value = patches[i_patch].particles_m[is].mx_h(ip);
+            value = particles.mx_.h(ip);
           } else if (axis_code[idim] == 5) {
-            value = patches[i_patch].particles_m[is].my_h(ip);
+            value = particles.my_.h(ip);
           } else if (axis_code[idim] == 6) {
-            value = patches[i_patch].particles_m[is].mz_h(ip);
+            value = particles.mz_.h(ip);
           }
 
           min_value[idim] = min(min_value[idim], static_cast<double>(value));
           max_value[idim] = max(max_value[idim], static_cast<double>(value));
-        }
-      } // loop on patches
+        } // end for each particles
 
       max_value[idim] *= 1.01;
 
@@ -300,11 +297,9 @@ void particle_binning(std::string diag_name,
     delta[idim] = (max_value[idim] - min_value[idim]) / n_cells[idim];
   }
 
-  // Project the particle properties of each patch in diag_data
-  for (size_t i_patch = 0; i_patch < patches.size(); ++i_patch) {
 
-    // get number of particles to project in the current patch
-    const unsigned int n_particles = patches[i_patch].particles_m[is].size();
+    // get number of particles to project
+    const unsigned int n_particles = particles.size();
 
     // Compute data
     for (unsigned int ip = 0; ip < n_particles; ip++) {
@@ -317,21 +312,21 @@ void particle_binning(std::string diag_name,
         if (axis_code[idim] == 0) {
           value[idim] = sqrt(
             1 +
-            patches[i_patch].particles_m[is].mx_h(ip) * patches[i_patch].particles_m[is].mx_h(ip) +
-            patches[i_patch].particles_m[is].my_h(ip) * patches[i_patch].particles_m[is].my_h(ip) +
-            patches[i_patch].particles_m[is].mz_h(ip) * patches[i_patch].particles_m[is].mz_h(ip));
+            particles.mx_.h(ip) * particles.mx_.h(ip) +
+            particles.my_.h(ip) * particles.my_.h(ip) +
+            particles.mz_.h(ip) * particles.mz_.h(ip));
         } else if (axis_code[idim] == 1) {
-          value[idim] = patches[i_patch].particles_m[is].x_h(ip);
+          value[idim] = particles.x_.h(ip);
         } else if (axis_code[idim] == 2) {
-          value[idim] = patches[i_patch].particles_m[is].y_h(ip);
+          value[idim] = particles.y_.h(ip);
         } else if (axis_code[idim] == 3) {
-          value[idim] = patches[i_patch].particles_m[is].z_h(ip);
+          value[idim] = particles.z_.h(ip);
         } else if (axis_code[idim] == 4) {
-          value[idim] = patches[i_patch].particles_m[is].mx_h(ip);
+          value[idim] = particles.mx_.h(ip);
         } else if (axis_code[idim] == 5) {
-          value[idim] = patches[i_patch].particles_m[is].my_h(ip);
+          value[idim] = particles.my_.h(ip);
         } else if (axis_code[idim] == 6) {
-          value[idim] = patches[i_patch].particles_m[is].mz_h(ip);
+          value[idim] = particles.mz_.h(ip);
         }
 
         if (value[idim] < min_value[idim] || value[idim] >= max_value[idim]) {
@@ -357,17 +352,16 @@ void particle_binning(std::string diag_name,
         }
 
         if (data_code == 0) {
-          diag_data[global_index] += static_cast<double>(patches[i_patch].particles_m[is].w_h(ip));
+          diag_data[global_index] += static_cast<double>(particles.weight_.h(ip));
         } else if (data_code == 1) {
           diag_data[global_index] +=
-            static_cast<double>(patches[i_patch].particles_m[is].w_h(ip) * params.inv_cell_volume);
+            static_cast<double>(particles.weight_.h(ip) * params.inv_cell_volume);
         } else if (data_code == 2) {
           diag_data[global_index] += 1;
         }
       }
     } // end for each particles
 
-  } // end for each patch
 
   // _______________________________________________________________
   // Save the diag_data
@@ -503,15 +497,12 @@ void fields(Params &params, ElectroMagn &em, unsigned int it, std::string format
 // _____________________________________________________________________
 void particle_cloud(std::string diag_name,
                     Params &params,
-                    std::vector<Patch> &patches,
+                    Particles<mini_float> &particles,
                     int is,
                     int it,
                     std::string format = "binary") {
 
-  unsigned int number_of_particles = 0;
-  for (size_t i_patch = 0; i_patch < patches.size(); i_patch++) {
-    number_of_particles += patches[i_patch].particles_m[is].size();
-  }
+  unsigned int number_of_particles = particles.size();
 
   // Output name template
   // binary: %s_s%02d_%0<max_it_digits>d.bin
@@ -538,22 +529,21 @@ void particle_cloud(std::string diag_name,
       std::raise(SIGABRT);
     }
 
-    for (size_t i_patch = 0; i_patch < patches.size(); i_patch++) {
-      const unsigned int n_particles = patches[i_patch].particles_m[is].size();
+
+      const unsigned int n_particles = particles.size();
       for (unsigned int ip = 0; ip < n_particles; ++ip) {
 
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].w_h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.weight_.h(ip)), sizeof(double));
 
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].x_h(ip)), sizeof(double));
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].y_h(ip)), sizeof(double));
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].z_h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.x_.h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.y_.h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.z_.h(ip)), sizeof(double));
 
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].mx_h(ip)), sizeof(double));
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].my_h(ip)), sizeof(double));
-        binary_file.write((char *)(&patches[i_patch].particles_m[is].mz_h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.mx_.h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.my_.h(ip)), sizeof(double));
+        binary_file.write((char *)(&particles.mz_.h(ip)), sizeof(double));
 
       } // End particle loop
-    } // End patch loop
 
     // Cleaning
     binary_file.close();
@@ -583,16 +573,14 @@ void particle_cloud(std::string diag_name,
     vtk_file << std::endl;
     vtk_file << "POINTS " << number_of_particles << " float" << std::endl;
 
-    for (size_t i_patch = 0; i_patch < patches.size(); ++i_patch) {
-      const unsigned int n_particles = patches[i_patch].particles_m[is].size();
+      const unsigned int n_particles = particles.size();
       for (unsigned int ip = 0; ip < n_particles; ++ip) {
 
-        vtk_file << patches[i_patch].particles_m[is].z_h(ip) << " "
-                 << patches[i_patch].particles_m[is].y_h(ip) << " "
-                 << patches[i_patch].particles_m[is].x_h(ip) << std::endl;
+        vtk_file << particles.z_.h(ip) << " "
+                 << particles.y_.h(ip) << " "
+                 << particles.x_.h(ip) << std::endl;
 
       } // End particle loop
-    } // End patch loop
 
     // Construction of the weight
     vtk_file << std::endl;
@@ -600,13 +588,11 @@ void particle_cloud(std::string diag_name,
     vtk_file << "SCALARS weight float" << std::endl;
     vtk_file << "LOOKUP_TABLE default" << std::endl;
 
-    for (size_t i_patch = 0; i_patch < patches.size(); i_patch++) {
-      for (unsigned int ip = 0; ip < patches[i_patch].particles_m[is].size(); ++ip) {
+      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
 
-        vtk_file << patches[i_patch].particles_m[is].w_h(ip) << " ";
+        vtk_file << particles.weight_.h(ip) << " ";
 
       } // End particle loop
-    } // End patch loop
 
     vtk_file << std::endl;
 
@@ -614,33 +600,31 @@ void particle_cloud(std::string diag_name,
     vtk_file << std::endl;
     vtk_file << "SCALARS gamma float" << std::endl;
     vtk_file << "LOOKUP_TABLE default" << std::endl;
-    for (size_t i_patch = 0; i_patch < patches.size(); i_patch++) {
 
-      for (unsigned int ip = 0; ip < patches[i_patch].particles_m[is].size(); ++ip) {
+
+      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
 
         const mini_float gamma =
           1 /
           sqrt(
             1. +
-            patches[i_patch].particles_m[is].mx_h(ip) * patches[i_patch].particles_m[is].mx_h(ip) +
-            patches[i_patch].particles_m[is].my_h(ip) * patches[i_patch].particles_m[is].my_h(ip) +
-            patches[i_patch].particles_m[is].mz_h(ip) * patches[i_patch].particles_m[is].mz_h(ip));
+            particles.mx_.h(ip) * particles.mx_.h(ip) +
+            particles.my_.h(ip) * particles.my_.h(ip) +
+            particles.mz_.h(ip) * particles.mz_.h(ip));
 
         vtk_file << gamma << " ";
       }
-    }
+
     vtk_file << std::endl;
 
     // Construction of the momentum vector
     vtk_file << std::endl;
     vtk_file << "VECTORS momentum float" << std::endl;
-    for (size_t i_patch = 0; i_patch < patches.size(); i_patch++) {
-      for (unsigned int ip = 0; ip < patches[i_patch].particles_m[is].size(); ++ip) {
-        vtk_file << patches[i_patch].particles_m[is].mx_h(ip) << " ";
-        vtk_file << patches[i_patch].particles_m[is].my_h(ip) << " ";
-        vtk_file << patches[i_patch].particles_m[is].mz_h(ip) << " ";
+      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
+        vtk_file << particles.mx_.h(ip) << " ";
+        vtk_file << particles.my_.h(ip) << " ";
+        vtk_file << particles.mz_.h(ip) << " ";
       }
-    }
 
     vtk_file.close();
   }
@@ -663,20 +647,15 @@ void particle_cloud(std::string diag_name,
 //! \param[in] is - species
 //! \param[in] it - iteration
 // _____________________________________________________________________
-void scalars(Params &params, std::vector<Patch> &patches, unsigned int is, unsigned int it) {
+void scalars(Params &params, Particles<mini_float> &particles, unsigned int is, unsigned int it) {
 
   // Particle scalars _________________________________________
 
   unsigned int number_of_particles  = 0;
   mini_float species_kinetic_energy = 0;
 
-  for (unsigned int i_patch = 0; i_patch < patches.size(); ++i_patch) {
-
-    species_kinetic_energy += patches[i_patch].particles_m[is].get_kinetic_energy(minipic::device);
-
-    number_of_particles += patches[i_patch].particles_m[is].size();
-
-  } // end loop patch
+    species_kinetic_energy += particles.get_kinetic_energy(minipic::device);
+    number_of_particles += particles.size();
 
   // output scalars file _____________________________________
 

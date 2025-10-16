@@ -16,10 +16,7 @@
 #include "SubDomain.hpp"
 
 // Load a setup
-#include "study_thermal.hpp"
-// #include "study_sorted.hpp"
-// #include "study_random.hpp"
-// #include"default_gpu.hpp"
+#include"thermal.hpp"
 
 //! Main function
 int main(int argc, char *argv[]) {
@@ -63,6 +60,8 @@ int main(int argc, char *argv[]) {
 
     SubDomain subdomain;
 
+    timers.start(timers.initialization);
+
     // Creation of the domain
     subdomain.allocate(params);
 
@@ -71,7 +70,6 @@ int main(int argc, char *argv[]) {
 
     timers.stop(timers.initialization);
     timers.save_initialization();
-    timers.start(timers.main_loop);
 
     // ______________________________________________________
     //

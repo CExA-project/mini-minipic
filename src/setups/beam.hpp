@@ -34,19 +34,9 @@ void setup(Params &params) {
   // Decomp
   params.n_subdomains = 1;
 
-  int nx_cells = static_cast<int>((params.sup_x - params.inf_x) / dx);
-  int ny_cells = static_cast<int>((params.sup_y - params.inf_y) / dy);
-  int nz_cells = static_cast<int>((params.sup_z - params.inf_z) / dz);
-
-  // Number of patches
-  params.nx_patch = 1;
-  params.ny_patch = 1;
-  params.nz_patch = 1;
-
-  // Cells per patch per direction
-  params.nx_cells_by_patch = nx_cells / params.nx_patch;
-  params.ny_cells_by_patch = ny_cells / params.ny_patch;
-  params.nz_cells_by_patch = nz_cells / params.nz_patch;
+  params.nx_cells = static_cast<int>((params.sup_x - params.inf_x) / dx);
+  params.ny_cells = static_cast<int>((params.sup_y - params.inf_y) / dy);
+  params.nz_cells = static_cast<int>((params.sup_z - params.inf_z) / dz);
 
   // Time
   params.dt = 0.9;
@@ -106,9 +96,9 @@ void setup(Params &params) {
   params.add_particle_binning("diag_x_y_z_d",
                               "density",
                               {"x", "y", "z"},
-                              {params.nx_patch * params.nx_cells_by_patch,
-                               params.ny_patch * params.ny_cells_by_patch,
-                               params.nz_patch * params.nz_cells_by_patch},
+                              {params.nx_cells,
+                               params.ny_cells,
+                               params.nz_cells},
                               {0., 0., 0.},
                               {params.sup_x, params.sup_y, params.sup_z},
                               {0, 1},

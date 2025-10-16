@@ -25,23 +25,13 @@ void setup(Params &params) {
   // Decomp
   params.n_subdomains = 1;
 
-  int nx_cells = 32;
-  int ny_cells = 32;
-  int nz_cells = 32;
+  params.nx_cells = 32;
+  params.ny_cells = 32;
+  params.nz_cells = 32;
 
-  // const double dx = (params.sup_x - params.inf_x) / nx_cells;
-  // const double dy = (params.sup_y - params.inf_y) / ny_cells;
-  // const double dz = (params.sup_z - params.inf_z) / nz_cells;
-
-  // Number of patches
-  params.nx_patch = 1;
-  params.ny_patch = 1;
-  params.nz_patch = 1;
-
-  // Cells per patch per direction
-  params.nx_cells_by_patch = nx_cells / params.nx_patch;
-  params.ny_cells_by_patch = ny_cells / params.ny_patch;
-  params.nz_cells_by_patch = nz_cells / params.nz_patch;
+  // const double dx = (params.sup_x - params.inf_x) / params.nx_cells;
+  // const double dy = (params.sup_y - params.inf_y) / params.ny_cells;
+  // const double dz = (params.sup_z - params.inf_z) / params.nz_cells;
 
   params.dt = 0.9;
 
@@ -100,9 +90,9 @@ void setup(Params &params) {
   params.add_particle_binning("diag_x_y_z_d",
                               "density",
                               {"x", "y", "z"},
-                              {params.nx_patch * params.nx_cells_by_patch,
-                               params.ny_patch * params.ny_cells_by_patch,
-                               params.nz_patch * params.nz_cells_by_patch},
+                              {params.nx_cells,
+                               params.ny_cells,
+                               params.nz_cells},
                               {0., 0., 0.},
                               {params.sup_x, params.sup_y, params.sup_z},
                               {0, 1},
@@ -112,9 +102,9 @@ void setup(Params &params) {
   params.add_particle_binning("diag_px_py_pz_d",
                               "density",
                               {"px", "py", "pz"},
-                              {params.nx_patch * params.nx_cells_by_patch,
-                               params.ny_patch * params.ny_cells_by_patch,
-                               params.nz_patch * params.nz_cells_by_patch},
+                              {params.nx_cells,
+                               params.ny_cells,
+                               params.nz_cells},
                               {0., 0., 0.},
                               {0, 0, 0},
                               {0, 1},

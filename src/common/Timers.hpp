@@ -19,10 +19,6 @@
 
 #include "Params.hpp"
 
-namespace level {
-// Timers's level
-enum { global = 0, thread = 1 };
-} // namespace level
 
 // _______________________________________________________________
 //
@@ -66,13 +62,11 @@ public:
     // - initilization
     // - main loop
 
-    N_patches = params.N_patches;
-
-    temporary_times.resize(sections.size() * (1 + N_patches));
-    accumulated_times.resize(sections.size() * (1 + N_patches));
+    temporary_times.resize(sections.size());
+    accumulated_times.resize(sections.size());
 
     // initialize timers
-    for (size_t i = 0; i < sections.size() * (1 + N_patches); i++) {
+    for (size_t i = 0; i < sections.size() ; i++) {
       accumulated_times[i] = 0;
       temporary_times[i]   = T_clock::now();
     }
@@ -84,7 +78,6 @@ public:
     // Add parameters
     file << "{\n";
     file << "  \"parameters\" : {\n";
-    file << "    \"number_of_patches\" : " << N_patches << ",\n";
     file << "    \"iterations\" : " << params.n_it << ",\n";
     file << "    \"save_timers_period\" : " << params.save_timers_period << ",\n";
     file << "    \"save_timers_start\" : " << params.save_timers_start << "\n";
@@ -106,7 +99,6 @@ public:
     // auto time = std::chrono::high_resolution_clock::now();
 
     auto index = first_index(section);
-
     temporary_times[index] = T_clock::now();
 
     // std::cout << "Start timer " << section.name << " at " <<
@@ -130,35 +122,6 @@ public:
     // std::cout << "Stop timer " << section.name << " at " << time.time_since_epoch().count()
     //           << " with diff " << diff.count()
     //           << std::endl;
-  }
-
-  // _______________________________________________________________
-  //
-  //! Start a thread timer
-  // _______________________________________________________________
-  void start(Section section, int i_patch) {
-
-    auto index = first_index(section) + i_patch + 1;
-
-    // auto time = std::chrono::high_resolution_clock::now();
-    // auto time = T_clock::now();
-
-    temporary_times[index] = T_clock::now();
-  }
-
-  // _______________________________________________________________
-  //
-  //! Stop a timer
-  // _______________________________________________________________
-  void stop(Section section, int i_patch) {
-
-    auto index = first_index(section) + i_patch + 1;
-
-    // auto time = std::chrono::high_resolution_clock::now();
-    auto time = T_clock::now();
-
-    std::chrono::duration<double> diff = time - temporary_times[index];
-    accumulated_times[index] += diff.count();
   }
 
   // _______________________________________________________________
@@ -240,29 +203,26 @@ public:
   //
   //! \details The file is named "timers.json" and has the following format :
   //! {
-  //!   "parameters" : {
-  //!       "number_of_patches" : N_patches
-  //!   },
   //!   "initilization" : [global],
   //!   "0" : {
   //!       "pic iterations" : [global],
   //!       "diags" : [global],
-  //!       "interpolate" : [global, thread1, thread2, ...],
-  //!       "push" : [global, thread1, thread2, ...],
+  //!       "interpolate" : [global],
+  //!       "push" : [global],
   //!     ....
   //!   },
   //!   "10" : {
   //!     "pic iterations" : [global],
   //!     "diags" : [global],
-  //!     "interpolate" : [global, thread1, thread2, ...],
-  //!     "push" : [global, thread1, thread2, ...],
+  //!     "interpolate" : [global],
+  //!     "push" : [global],
   //!     ....
   //!   }
   //!   "final" : {
   //!     "pic iterations" : [global],
   //!     "diags" : [global],
-  //!     "interpolate" : [global, thread1, thread2, ...],
-  //!     "push" : [global, thread1, thread2, ...],
+  //!     "interpolate" : [global],
+  //!     "push" : [global],
   //!     ....
   //!   }
   //!   "main loop" : [global]
@@ -303,12 +263,7 @@ public:
 
       for (size_t itimer = 3; itimer < sections.size(); itimer++) {
         local_buffer << "    \"" << sections[itimer].name << "\" : [";
-        for (int i = 0; i < N_patches + 1; i++) {
-          local_buffer << accumulated_times[first_index(sections[itimer]) + i];
-          if (i < N_patches) {
-            local_buffer << ", ";
-          }
-        }
+          local_buffer << accumulated_times[first_index(sections[itimer])];
         if (itimer < sections.size() - 1) {
           local_buffer << "],\n";
         } else {
@@ -356,7 +311,7 @@ private:
   int N_patches;
 
   //! Get first index from section id
-  int first_index(Section section) { return section.id * (N_patches + 1); }
+  int first_index(Section section) { return section.id ; }
 
   //! Select a steady clock
   // static constexpr auto clock() {

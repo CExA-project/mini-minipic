@@ -130,34 +130,4 @@ public:
     Jy_m.sync(from, to);
     Jz_m.sync(from, to);
   }
-
-  // ____________________________________________________________________________
-  //! \brief Print a slice of the global current grid, debug function
-  // ____________________________________________________________________________
-  void print_current_slice(int slice_idx) {
-    std::cout << "Jx:\n";
-    for (int ix = 0; ix < nx_d_m; ix++) {
-      for (int iy = 0; iy < ny_p_m; iy++) {
-        // printf("\t%3.4e", Jx_m(ix, iy, slice_idx));
-        std::cout << Jx_m(ix, iy, slice_idx);
-      }
-      std::cout << ("\n");
-    }
-    std::cout << ("Jy:\n");
-    for (int ix = 0; ix < nx_p_m; ix++) {
-      for (int iy = 0; iy < ny_d_m; iy++) {
-        // printf ("\t%3.4e", Jy_m(ix, iy, slice_idx));
-        std::cout << Jy_m(ix, iy, slice_idx);
-      }
-      std::cout << ("\n");
-    }
-    std::cout << ("Jz:\n");
-    for (int ix = 0; ix < nx_p_m; ix++) {
-      for (int iy = 0; iy < ny_p_m; iy++) {
-        // printf ("\t%3.4e", Jz_m(ix, iy, slice_idx));
-        std::cout << Jz_m(ix, iy, slice_idx);
-      }
-      std::cout << ("\n");
-    }
-  }
 };

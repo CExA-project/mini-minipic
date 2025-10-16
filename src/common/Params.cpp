@@ -205,15 +205,10 @@ void Params::read_from_command_line_arguments(int argc, char *argv[]) {
         const unsigned int iterations = std::stoi(args[iarg + 1]);
         simulation_time               = iterations * dt;
         iarg += 2;
-      } else if (key == "-p" or key == "--patches") {
-        nx_patch = std::stoi(args[iarg + 1]);
-        ny_patch = std::stoi(args[iarg + 2]);
-        nz_patch = std::stoi(args[iarg + 3]);
-        iarg += 4;
-      } else if (key == "-cpp" or key == "--cells_per_patch") {
-        nx_cells_by_patch = std::stoi(args[iarg + 1]);
-        ny_cells_by_patch = std::stoi(args[iarg + 2]);
-        nz_cells_by_patch = std::stoi(args[iarg + 3]);
+      } else if (key == "-cpp" or key == "--cells") {
+        nx_cells = std::stoi(args[iarg + 1]);
+        ny_cells = std::stoi(args[iarg + 2]);
+        nz_cells = std::stoi(args[iarg + 3]);
         iarg += 4;
       } else if (key == "-dmin" or key == "--domain_min") {
         inf_x = std::stod(args[iarg + 1]);
@@ -314,10 +309,7 @@ void Params::info() {
   std::cout << "   - Boundary conditions: " << boundary_condition << std::endl;
 
   std::cout << std::endl;
-  std::cout << "   - number of patches: " << nx_patch << " " << ny_patch << " " << nz_patch
-            << std::endl;
-  std::cout << "   - cells per patch: " << nx_cells_by_patch << " " << ny_cells_by_patch << " "
-            << nz_cells_by_patch << std::endl;
+  std::cout << "   - cells: " << nx_cells << " " << ny_cells << " " << nz_cells << std::endl;
   std::cout << "   - space step: " << dx << " " << dy << " " << dz << std::endl;
 
   std::cout << std::endl;
@@ -346,15 +338,15 @@ void Params::info() {
     std::cout << std::endl;
   }
 
-  std::cout << " > Patch memory usage: " << std::endl;
-  const double patch_EM_grid_size =
-    (nx_cells_by_patch + 2) * (ny_cells_by_patch + 2) * (nz_cells_by_patch + 2) * 8 / 1024.;
+  std::cout << " > Memory usage: " << std::endl;
+  const double EM_grid_size =
+    (nx_cells + 2) * (ny_cells + 2) * (nz_cells + 2) * 8 / 1024.;
   const double patch_current_grid_size =
-    (nx_cells_by_patch + 4) * (ny_cells_by_patch + 4) * (nz_cells_by_patch + 4) * 8 / 1024.;
-  std::cout << "   - Patch EM grid size: " << patch_EM_grid_size << " Kb" << std::endl;
-  std::cout << "   - Patch current grid size: " << patch_current_grid_size << " Kb" << std::endl;
-  std::cout << "   - Total patch grid size: "
-            << patch_EM_grid_size * 6 + patch_current_grid_size * 3 << " Kb" << std::endl;
+    (nx_cells + 4) * (ny_cells + 4) * (nz_cells + 4) * 8 / 1024.;
+  std::cout << "   - EM grid size: " << EM_grid_size << " Kb" << std::endl;
+  std::cout << "   - Current grid size: " << patch_current_grid_size << " Kb" << std::endl;
+  std::cout << "   - Total grid size: "
+            << EM_grid_size * 6 + patch_current_grid_size * 3 << " Kb" << std::endl;
   std::cout << std::endl;
 
   std::cout << " > Timers: " << std::endl;

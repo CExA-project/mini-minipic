@@ -30,7 +30,7 @@ configuration_list = {
                  'args' : [ '', '', '', '-it 10000', '-it 10000'],
                  'exe_name' : 'minipic',
                  'threads' : [8, 8, 8, 1, 1],
-                 'benchmarks' : [ "default_gpu", "beam", "antenna" ]},
+                 'benchmarks' : [ "thermal", "beam", "antenna" ]},
 
     'kokkos_gpu' : { 'compiler' : 'g++',
                  'cmake' : '-DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release',
@@ -40,7 +40,7 @@ configuration_list = {
                  'args' : [ '', '', '', '', ''],
                  'exe_name' : 'minipic',
                  'threads' : [1, 1, 1],
-                 'benchmarks' : [ "default_gpu", "beam", "antenna"]},
+                 'benchmarks' : [ "thermal", "beam", "antenna"]},
 
 }
 

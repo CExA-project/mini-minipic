@@ -22,22 +22,16 @@ void setup(Params &params) {
 
   // Decomp
   params.n_subdomains = 1;
-
-  // Number of patches
-  params.nx_patch = 1;
-  params.ny_patch = 1;
-  params.nz_patch = 1;
-
   // Cells per patch per direction
-  params.nx_cells_by_patch = 384;
-  params.ny_cells_by_patch = 64;
-  params.nz_cells_by_patch = 64;
+  params.nx_cells = 384;
+  params.ny_cells = 64;
+  params.nz_cells = 64;
 
   // Time
 
-  // const double dx = (params.sup_x - params.inf_x) / (params.nx_cells_by_patch * params.nx_patch);
-  // const double dy = (params.sup_y - params.inf_y) / (params.ny_cells_by_patch * params.ny_patch);
-  // const double dz = (params.sup_z - params.inf_z) / (params.nz_cells_by_patch * params.nz_patch);
+  // const double dx = (params.sup_x - params.inf_x) / (params.nx_cells * params.nx_patch);
+  // const double dy = (params.sup_y - params.inf_y) / (params.ny_cells * params.ny_patch);
+  // const double dz = (params.sup_z - params.inf_z) / (params.nz_cells * params.nz_patch);
 
   params.dt = 0.95;
 

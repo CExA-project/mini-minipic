@@ -70,64 +70,6 @@ public:
   //! This flag when false prevents the allocation of E and B fields
   bool with_electromagnetic_fields_ = true;
 
-  // ________________________________________________________
-  // Host data accessors
-
-  //! \brief x accessor
-  //! \param[in] ip particle index
-  INLINE T &x_h(unsigned int ip) { return x_.h(ip); }
-
-  //! \brief y accessor
-  //! \param[in] ip particle index
-  INLINE T &y_h(unsigned int ip) { return y_.h(ip); }
-
-  //! \brief z accessor
-  //! \param[in] ip particle index
-  INLINE T &z_h(unsigned int ip) { return z_.h(ip); }
-
-  //! \brief mx accessor
-  //! \param[in] ip particle index
-  INLINE T &mx_h(unsigned int ip) { return mx_.h(ip); }
-
-  //! \brief my accessor
-  //! \param[in] ip particle index
-  INLINE T &my_h(unsigned int ip) { return my_.h(ip); }
-
-  //! \brief mz accessor
-  //! \param[in] ip particle index
-  INLINE T &mz_h(unsigned int ip) { return mz_.h(ip); }
-
-  //! \brief w accessor
-  //! \param[in] ip particle index
-  INLINE T &w_h(unsigned int ip) { return weight_.h(ip); }
-
-  //! \brief gamma_inv accessor
-  //! \param[in] ip particle index
-  // INLINE T &gamma_inv_h(unsigned int ip) { return gamma_inv_.h(ip); }
-
-  //! \brief Ex accessor
-  //! \param[in] ip particle index
-  INLINE T &Ex_h(unsigned int ip) { return Ex_.h(ip); }
-
-  //! \brief Ey accessor
-  //! \param[in] ip particle index
-  INLINE T &Ey_h(unsigned int ip) { return Ey_.h(ip); }
-
-  //! \brief Ez accessor
-  //! \param[in] ip particle index
-  INLINE T &Ez_h(unsigned int ip) { return Ez_.h(ip); }
-
-  //! \brief Bx accessor
-  //! \param[in] ip particle index
-  INLINE T &Bx_h(unsigned int ip) { return Bx_.h(ip); }
-
-  //! \brief By accessor
-  //! \param[in] ip particle index
-  INLINE T &By_h(unsigned int ip) { return By_.h(ip); }
-
-  //! \brief Bz accessor
-  //! \param[in] ip particle index
-  INLINE T &Bz_h(unsigned int ip) { return Bz_.h(ip); }
 
   //! \brief Gamma accessor using the momentum
   //! \param[in] ip particle index
@@ -172,7 +114,7 @@ public:
 
   // __________________________________________________________________________
   //
-  //! \brief Give the number of particles, use std::size
+  //! \brief Give the number of particles
   // __________________________________________________________________________
   unsigned int size() const { return n_particles_m; }
 
@@ -201,10 +143,6 @@ public:
       By_.clear();
       Bz_.clear();
     }
-
-    // if (with_gamma_) {
-    //   gamma_inv_.clear();
-    // }
 
     n_particles_m = 0;
   }
@@ -298,7 +236,7 @@ public:
     T kinetic_energy = 0;
 
     if constexpr (std::is_same<T_space, minipic::Device>::value) {
-      
+
       device_vector_t w  = weight_.data_;
       device_vector_t mx = mx_.data_;
       device_vector_t my = my_.data_;
@@ -356,8 +294,8 @@ public:
   // __________________________________________________________________________
   void print() {
     for (int ip = 0; ip < n_particles_m; ++ip) {
-      std::cerr << "" << ip << " - " << x_h(ip) << " " << y_h(ip) << " " << z_h(ip)
-                << " mx: " << mx_h(ip) << " my: " << my_h(ip) << " mz: " << mz_h(ip) << std::endl;
+      std::cerr << "" << ip << " - " << x_.h(ip) << " " << y_.h(ip) << " " << z_.h(ip)
+                << " mx: " << mx_.h(ip) << " my: " << my_.h(ip) << " mz: " << mz_.h(ip) << std::endl;
     }
   }
 
@@ -369,13 +307,13 @@ public:
 
     for (int ip = 0; ip < n_particles_m; ++ip) {
 
-      if ((x_h(ip) <= xmin) || (x_h(ip) >= xmax) || (y_h(ip) <= ymin) || (y_h(ip) >= ymax) ||
-          (z_h(ip) <= zmin) || (z_h(ip) >= zmax)) {
+      if ((x_.h(ip) <= xmin) || (x_.h(ip) >= xmax) || (y_.h(ip) <= ymin) || (y_.h(ip) >= ymax) ||
+          (z_.h(ip) <= zmin) || (z_.h(ip) >= zmax)) {
         std::cerr << "Particle: " << ip << "/" << n_particles_m << std::endl;
-        std::cerr << " x: " << x_h(ip) << " [" << xmin << " " << xmax << "]" << std::endl;
-        std::cerr << " y: " << y_h(ip) << " [" << ymin << " " << ymax << "]" << std::endl;
-        std::cerr << " z: " << z_h(ip) << " [" << zmin << " " << zmax << "]" << std::endl;
-        std::cerr << " mx: " << mx_h(ip) << " my: " << my_h(ip) << " mz: " << mz_h(ip) << std::endl;
+        std::cerr << " x: " << x_.h(ip) << " [" << xmin << " " << xmax << "]" << std::endl;
+        std::cerr << " y: " << y_.h(ip) << " [" << ymin << " " << ymax << "]" << std::endl;
+        std::cerr << " z: " << z_.h(ip) << " [" << zmin << " " << zmax << "]" << std::endl;
+        std::cerr << " mx: " << mx_.h(ip) << " my: " << my_.h(ip) << " mz: " << mz_.h(ip) << std::endl;
       }
     }
   }
@@ -406,23 +344,23 @@ public:
 
     for (int ip = 0; ip < n_particles_m; ++ip) {
 
-      x_sum += std::abs(x_h(ip));
-      y_sum += std::abs(y_h(ip));
-      z_sum += std::abs(z_h(ip));
+      x_sum += std::abs(x_.h(ip));
+      y_sum += std::abs(y_.h(ip));
+      z_sum += std::abs(z_.h(ip));
 
-      mx_sum += std::abs(mx_h(ip));
-      my_sum += std::abs(my_h(ip));
-      mz_sum += std::abs(mz_h(ip));
+      mx_sum += std::abs(mx_.h(ip));
+      my_sum += std::abs(my_.h(ip));
+      mz_sum += std::abs(mz_.h(ip));
 
       // gamma_inv_sum += std::abs(gamma_inv_h(ip));
 
-      Ex_sum += std::abs(Ex_h(ip));
-      Ey_sum += std::abs(Ey_h(ip));
-      Ez_sum += std::abs(Ez_h(ip));
+      Ex_sum += std::abs(Ex_.h(ip));
+      Ey_sum += std::abs(Ey_.h(ip));
+      Ez_sum += std::abs(Ez_.h(ip));
 
-      Bx_sum += std::abs(Bx_h(ip));
-      By_sum += std::abs(By_h(ip));
-      Bz_sum += std::abs(Bz_h(ip));
+      Bx_sum += std::abs(Bx_.h(ip));
+      By_sum += std::abs(By_.h(ip));
+      Bz_sum += std::abs(Bz_.h(ip));
     }
 
     std::cerr << std::scientific << std::setprecision(15) << "x sum: " << x_sum
@@ -443,8 +381,8 @@ private:
     T kinetic_energy = 0;
 
     for (size_t ip = 0; ip < size(); ++ip) {
-      const T gamma = sqrt(1. + mx_h(ip) * mx_h(ip) + my_h(ip) * my_h(ip) + mz_h(ip) * mz_h(ip));
-      kinetic_energy += w_h(ip) * (gamma - 1.);
+      const T gamma = sqrt(1. + mx_.h(ip) * mx_.h(ip) + my_.h(ip) * my_.h(ip) + mz_.h(ip) * mz_.h(ip));
+      kinetic_energy += weight_.h(ip) * (gamma - 1.);
     }
 
     return kinetic_energy;
