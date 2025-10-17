@@ -41,35 +41,23 @@ set(MINIPIC_IMPLEMENTATION "exercise" CACHE STRING "Which implementation to use"
 
 message(" Minipic compilation: ${MINIPIC_BUILD}")
 
-set(COMPILE_OPTIONS "")
-set(LINK_OPTIONS "")
-
 # _________________________________________________________________
 # Debug mode
 
-if(MINIPIC_DEBUG)
- message(" Debug mode: ON")
- set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_DEBUG__)
-endif()
+message(" Debug mode: ${MINIPIC_DEBUG}")
 
 # _________________________________________________________________
 # Warning mode
 
 if(MINIPIC_WARNING)
- message(" Warning mode: ON")
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 endif()
+message(" Warning mode: ${MINIPIC_WARNING}")
 
 # _________________________________________________________________
 # Unified memory
 
-if(MINIPIC_UNIFIED_MEMORY)
- message(" Unified memory: ON")
- set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_KOKKOS_UNIFIED__)
-else()
- message(" Unified memory: OFF")
- set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_KOKKOS_NON_UNIFIED__)
-endif()
+message(" Unified memory: ${MINIPIC_UNIFIED_MEMORY}")
 
 # _________________________________________________________________
 # Implementation
@@ -119,10 +107,7 @@ endif()
 
 file(GLOB SOURCES_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
 
-set(COMPILE_OPTIONS ${COMPILE_OPTIONS} -D__MINIPIC_KOKKOS__ -D__MINIPIC_KOKKOS_COMMON__ -D__MINIPIC_KOKKOS_NON_UNIFIED__)
-
 if(MINIPIC_BUILD)
-
   add_executable(
     minipic
     ${SOURCES_COMMON}
@@ -135,20 +120,15 @@ if(MINIPIC_BUILD)
       "src/common"
       "src/${MINIPIC_IMPLEMENTATION}"
   )
-  target_compile_options(
+  target_compile_definitions(
     minipic
-    PRIVATE
-      ${COMPILE_OPTIONS}
-  )
-  target_link_options(
-    minipic
-    PRIVATE
-      ${LINK_OPTIONS}
+    PUBLIC
+      $<$<BOOL:${MINIPIC_DEBUG}>:__MINIPIC_DEBUG__>
+      $<IF:$<BOOL${MINIPIC_UNIFIED_MEMORY}>,__MINIPIC_KOKKOS_UNIFIED__,__MINIPIC_KOKKOS_NON_UNIFIED__>
   )
   target_link_libraries(
     minipic
     PRIVATE
       Kokkos::kokkos
   )
-
 endif()
