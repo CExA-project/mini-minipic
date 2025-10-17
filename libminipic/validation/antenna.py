@@ -1,15 +1,11 @@
-# ______________________________________________________________________
-#
-# Validation script for the `antenna` benchmark
-#
-# ______________________________________________________________________
+"""Validation script for the `antenna` benchmark."""
 
 import os
 
 import numpy as np
 
-import lib.minipic_ci as minipic_ci
-import lib.minipic_diag as minipic_diag
+from libminipic import ci as minipic_ci
+from libminipic import diag as minipic_diag
 
 
 def validate(evaluate=True, threshold=1e-10):
@@ -200,17 +196,3 @@ def validate(evaluate=True, threshold=1e-10):
                     "relative",
                     "{} field not similar".format(field),
                 )
-
-
-if __name__ == "__main__":
-    script_name = os.path.basename(__file__)
-    if not (os.path.exists("diags") and os.path.isdir("diags")):
-        print("Directory diags should be present where you run this script")
-        exit()
-
-    print("")
-    print(f"   -> Launch the validation process for {script_name}")
-    print("")
-    validate(evaluate=True)
-    print("")
-    print(f" \033[32mBenchmark `{script_name}` tested with success \033[39m")

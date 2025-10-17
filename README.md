@@ -57,14 +57,16 @@ miniPIC is a playground for computer science and HPC experiments applied to the 
 ## Repository structure
 
 - `doc`: documentation pages
-- `src`: C++ source
+- `src`: C++ sources
   - `setups`: headers used to initialize the physical parameters
   - `common`: source files common to all backends
-  - backend specific folder (`kokkos`, `thrust`, etc): backend specific operators
-- `lib`: Python libraries for miniPIC python tools
+  - implementation specific folder (`kokkos`, `exercise`, etc)
+    - `Operators.hpp`: Operator functions
+    - `SubDomain.hpp`: Operator calls in the time loop
+- `libminipic`: Python libraries for miniPIC Python tools and validation scripts
 - `script`: Python scripts to read and plot diags
-- `tests`: simulation tests used to validate the code
-- `validation`: Python validation scripts
+- `slurm`: Slurm scripts for various supercomputers
+- `external`: Git submodules location
 
 
 ## How to use miniPIC
@@ -77,7 +79,6 @@ miniPIC is a playground for computer science and HPC experiments applied to the 
 
 ## How to contribute
 
-- [Run the validation tests](./doc/validation.md)
 - [Continuous Integration](./doc/ci.md)
 - [Code structure](./doc/code_structure.md)
 

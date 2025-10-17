@@ -1,0 +1,29 @@
+[project]
+name = "libminipic"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "matplotlib>=3.10.7,<3.11.0",
+    "numpy>=2.3.3,<2.4.0",
+    "pandas>=2.3.3,<2.4.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=25.9.0,<25.10.0",
+    "isort>=7.0.0,<7.1.0",
+]
+
+[project.scripts]
+mini-run = "libminipic.run:run"
+mini-validate = "libminipic.validate:validate"
+
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.isort]
+profile = "black"

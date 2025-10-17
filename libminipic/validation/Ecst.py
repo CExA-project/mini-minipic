@@ -1,15 +1,11 @@
-# ______________________________________________________________________
-#
-# Validation script for the `Ecst` benchmark
-#
-# ______________________________________________________________________
+"""Validation script for the `Ecst` benchmark."""
 
 import os
 
 import numpy as np
 
-import lib.minipic_ci as minipic_ci
-import lib.minipic_diag as minipic_diag
+from libminipic import ci as minipic_ci
+from libminipic import diag as minipic_diag
 
 
 def validate(evaluate=True, threshold=1e-10):

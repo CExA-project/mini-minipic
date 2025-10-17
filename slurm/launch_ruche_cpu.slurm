@@ -8,14 +8,16 @@
 #SBATCH --cpus-per-task=8
 #SBATCH --partition=cpu_short
 
-set -x
-cd "${SLURM_SUBMIT_DIR}"
+set -e
+
+# ________________________________________________________________________
+# Modules
 
 module purge
 module load "gcc/13.2.0/gcc-4.8.5"
 module load "cmake/3.21.4/gcc-13.2.0"
 
-# _________________________________________
-# Kokkos
+# ________________________________________________________________________
+# Launch the test
 
-python run.py -g cpu-openmp
+mini-run -g cpu-openmp

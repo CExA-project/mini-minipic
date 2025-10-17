@@ -1,12 +1,7 @@
-# ______________________________________________________________________________
-#
-# Plot the energy balance
-#
-# ______________________________________________________________________________
+"""Plot the energy balance."""
 
 import argparse
 import glob
-import sys
 
 import numpy as np
 from matplotlib import *
@@ -41,7 +36,7 @@ rcParams["ytick.minor.width"] = 1.5
 parser = argparse.ArgumentParser(description="Print 3D diag")
 
 parser.add_argument(
-    "-f", "--folder", type=str, help="Path toward diags folder", default="diags"
+    "folder", type=str, help="Path toward diags folder", default="diags"
 )
 
 args = parser.parse_args()

@@ -11,16 +11,17 @@
 #SBATCH -p gpua100
 #SBATCH --gres=gpu:1
 
-#set -x
-set -eu
-cd ${SLURM_SUBMIT_DIR}
+set -e
+
+# ________________________________________________________________________
+# Modules
 
 module purge
 module load "gcc/13.2.0/gcc-4.8.5"
 module load "cuda/12.8.0/gcc-13.2.0"
 module load "cmake/3.21.4/gcc-13.2.0"
 
-# ________________________
-# Kokkos
+# ________________________________________________________________________
+# Launch the test
 
-python run.py -g gpu-a100
+mini-run -g gpu-a100

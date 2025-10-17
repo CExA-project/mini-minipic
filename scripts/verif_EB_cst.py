@@ -5,7 +5,6 @@ import sys
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
 from numpy import linalg as LA
 
 filename = sys.argv[1]

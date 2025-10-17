@@ -5,13 +5,10 @@ import sys
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from numpy import linalg as LA
 
 # ______________________________________________________________________________
 # Read command line arguments
-
-file_path = "/Users/mathieu/Codes/minipic/kokkos/tests/Ecst/diags"
 
 if len(sys.argv) > 1:
     file_path = sys.argv[1]

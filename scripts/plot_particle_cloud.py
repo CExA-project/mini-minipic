@@ -1,20 +1,11 @@
-# ______________________________________________________________________________
-#
-# Read and plot the particles at a specific iteration
-#
-# ______________________________________________________________________________
+"""Read and plot the particles at a specific iteration."""
 
-import struct
-import sys
+from argparse import ArgumentParser
 
-import numpy as np
 from matplotlib import *
 from matplotlib.pyplot import *
-from mpl_toolkits.mplot3d import Axes3D
 
-import lib.minipic_diag as minipic_diag
-
-# from mayavi import mlab
+from libminipic import diag as minipic_diag
 
 # ______________________________________________________________________________
 # RCParams - personalize the figure output
@@ -42,9 +33,9 @@ rcParams["ytick.minor.width"] = 1.5
 # ______________________________________________________________________________
 # Read command line arguments
 
-parser = argparse.ArgumentParser(description="Plot particle cloud")
+parser = ArgumentParser(description="Plot particle cloud")
 
-parser.add_argument("-f", "--file", type=str, help="Path toward the diag cloud file")
+parser.add_argument("file", type=str, help="Path toward the diag cloud file")
 # parser.add_argument('-c', '--colormap', type=str, help="colormap to use", default="plasma")
 
 args = parser.parse_args()

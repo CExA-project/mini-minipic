@@ -18,3 +18,4 @@ html*
 latex*
 *.opt.yaml
 external/
+*.egg-info

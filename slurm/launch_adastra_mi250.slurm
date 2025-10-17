@@ -5,15 +5,12 @@
 #SBATCH --time=02:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --account=cin4492
 #SBATCH --exclusive
 #SBATCH --constraint=MI250&turbo
 #SBATCH --cpus-per-task=16
 #SBATCH --gpus-per-node=1
 
-set -x
-ulimit -c unlimited
-cd "${SLURM_SUBMIT_DIR}"
+set -e
 
 export OMP_NUM_THREADS=16
 export OMP_PROC_BIND=CLOSE
@@ -29,6 +26,17 @@ echo "Number of Tasks Allocated      = $SLURM_NTASKS"
 echo "Number of Cores/Task Allocated = $SLURM_CPUS_PER_TASK"
 
 # ________________________________________________________________________
+# Modules
+
+module purge
+module load cpe/24.07
+module load craype-accel-amd-gfx90a craype-x86-genoa
+module load PrgEnv-cray
+module load amd-mixed
+module load cmake
+module load python
+
+# ________________________________________________________________________
 # Launch the test
 
-python run.py -g gpu-mi250
+mini-run -g gpu-mi250

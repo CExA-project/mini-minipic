@@ -6,7 +6,6 @@ import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from mpl_toolkits.mplot3d import Axes3D
 
 if len(sys.argv) == 1:
     print("Usage: python3 print_particles.py filename.data")

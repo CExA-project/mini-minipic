@@ -1,24 +1,14 @@
-# __________________________________________________________
-#
-# This script is used to plot the particle binning diag
-# __________________________________________________________
-
+"""Plot the particle binning diag."""
 
 import argparse
 import os
-import struct
 import sys
 
 import matplotlib.animation as animation
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
-# import pandas as pd
-import numpy as np
-
-import lib.minipic_diag
-
-path = ""
+from libminipic import diag as minipic_diag
 
 # Use argparse to parse arguments
 # -h for help
@@ -27,7 +17,7 @@ path = ""
 
 parser = argparse.ArgumentParser(description="Plot particle binning diag")
 
-parser.add_argument("-f", "--file", type=str, help="Path toward the diag binning file")
+parser.add_argument("file", type=str, help="Path toward the diag binning file")
 parser.add_argument(
     "-c", "--colormap", type=str, help="colormap to use", default="plasma"
 )
@@ -45,14 +35,14 @@ if not os.path.isfile(args.file):
 
 # Get the binning dimension
 
-dim = lib.minipic_diag.get_diag_dimension(args.file)
+dim = minipic_diag.get_diag_dimension(args.file)
 
 print(" diag dimension : {}".format(dim))
 
 if dim == 1:
 
     # Read file 1D
-    x_axis, x_min, x_max, x, data_name, data = lib.minipic_diag.read_1d_diag(args.file)
+    x_axis, x_min, x_max, x, data_name, data = minipic_diag.read_1d_diag(args.file)
 
     print(" data name : {}".format(data_name))
     print(" x_axis : {}".format(x_axis))
@@ -73,7 +63,7 @@ if dim == 1:
 
 elif dim == 2:
 
-    x_axis, x, y_axis, y, data_name, data_map = lib.minipic_diag.read_3d_diag(args.file)
+    x_axis, x, y_axis, y, data_name, data_map = minipic_diag.read_3d_diag(args.file)
 
     print(" data name : {}".format(data_name))
     print(" x_axis : {}".format(x_axis))
@@ -109,8 +99,8 @@ elif dim == 2:
 
 elif dim == 3:
 
-    x_axis, x, y_axis, y, z_axis, z, data_name, data_map = (
-        lib.minipic_diag.read_3d_diag(args.file)
+    x_axis, x, y_axis, y, z_axis, z, data_name, data_map = minipic_diag.read_3d_diag(
+        args.file
     )
 
     print(" data name : {}".format(data_name))

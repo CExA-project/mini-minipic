@@ -22,8 +22,9 @@ test_exercise_serial:
   # needs: [ test_omp ]
   before_script:
     - source ${WORKDIR}/gitlab-ci_runs/env/kokkos_omp_cpu_intel
+    - pip install --user .
   script:
-    - srun --time=00:20:00 --cpus-per-task=4 --ntasks=1 --partition=cpu_short python3 tests/run.py -c icpx -g cpu-serial --cmake-args-add="-DMINIPIC_IMPLEMENTATION=exercise" --build="build/exercise"
+    - srun --time=00:20:00 --cpus-per-task=4 --ntasks=1 --partition=cpu_short mini-run -c icpx -g cpu-serial --cmake-args-add="-DMINIPIC_IMPLEMENTATION=exercise" --build="build/exercise"
 
 # _____________________________________________________________________________
 #
@@ -38,8 +39,9 @@ test_kokkos_omp:
   # needs: [ test_omp ]
   before_script:
     - source ${WORKDIR}/gitlab-ci_runs/env/kokkos_omp_cpu_intel
+    - pip install --user .
   script:
-    - srun --time=00:20:00 --cpus-per-task=8 --ntasks=1 --partition=cpu_short python3 tests/run.py -c icpx -g cpu-openmp --cmake-args-add="-DMINIPIC_IMPLEMENTATION=kokkos" --build="build/kokkos/omp"
+    - srun --time=00:20:00 --cpus-per-task=8 --ntasks=1 --partition=cpu_short mini-run -c icpx -g cpu-openmp --cmake-args-add="-DMINIPIC_IMPLEMENTATION=kokkos" --build="build/kokkos/omp"
 
 # _____________________________________________________________________________
 #
@@ -54,5 +56,6 @@ test_kokkos_gpu:
   # needs: [ test_kokkos_omp ]
   before_script:
     - source $WORKDIR/gitlab-ci_runs/env/kokkos_a100
+    - pip install --user .
   script:
-    - srun --nodes=1 --time=00:15:00 -p gpua100 --gres=gpu:1 --exclude=$EXCLUDED_GPUS python3 tests/run.py -c g++ -g gpu-a100 --cmake-args-add="-DMINIPIC_IMPLEMENTATION=kokkos" --build="build/kokkos/gpu"
+    - srun --nodes=1 --time=00:15:00 -p gpua100 --gres=gpu:1 --exclude=$EXCLUDED_GPUS mini-run -c g++ -g gpu-a100 --cmake-args-add="-DMINIPIC_IMPLEMENTATION=kokkos" --build="build/kokkos/gpu"

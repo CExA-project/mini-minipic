@@ -5,9 +5,6 @@ import sys
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-
-path = ""
 
 if len(sys.argv) == 1:
     print("Usage: python3 print_fields.py path/to/data/directory it")

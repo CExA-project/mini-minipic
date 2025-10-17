@@ -1,16 +1,11 @@
-# ______________________________________________________________________
-#
-# Validation script for the `beam` benchmark
-#
-# ______________________________________________________________________
+"""Validation script for the `beam` benchmark."""
 
-import math
 import os
 
 import numpy as np
 
-import lib.minipic_ci as minipic_ci
-import lib.minipic_diag
+from libminipic import ci as minipic_ci
+from libminipic import diag as minipic_diag
 
 
 def validate(evaluate=True, threshold=1e-10):
@@ -319,7 +314,7 @@ def validate(evaluate=True, threshold=1e-10):
             file = "diag_w_gamma_s{:02d}_{:03d}.bin".format(ispecies, it)
 
             x_axis_name, x_min, x_max, x_data, data_name, data = (
-                lib.minipic_diag.read_1d_diag("diags/" + file)
+                minipic_diag.read_1d_diag("diags/" + file)
             )
 
             new_data.append(np.sum(data * x_data))
@@ -343,24 +338,8 @@ def validate(evaluate=True, threshold=1e-10):
 
             reference_dict["gamma_spectrum"][ispecies] = new_data
 
-    if not (evaluate):
+    if not evaluate:
 
         print("Reference data:")
 
-        # import json
-        # print(json.dumps(reference_dict, indent=4))
         print(reference_dict)
-
-
-if __name__ == "__main__":
-    script_name = os.path.basename(__file__)
-    if not (os.path.exists("diags") and os.path.isdir("diags")):
-        print("Directory diags should be present where you run this script")
-        exit()
-
-    print("")
-    print(f"   -> Launch the validation process for {script_name}")
-    print("")
-    validate(evaluate=True)
-    print("")
-    print(f" \033[32mBenchmark `{script_name}` tested with success \033[39m")

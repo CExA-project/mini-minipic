@@ -1,24 +1,14 @@
-# __________________________________________________________
-#
-# This script is used to plot the particle binning diag
-# __________________________________________________________
-
+"""Plot the particle binning diag."""
 
 import argparse
 import os
-import struct
 import sys
 
 import matplotlib.animation as animation
 import matplotlib.gridspec as gridspec
 import matplotlib.pyplot as plt
 
-# import pandas as pd
-import numpy as np
-
-import lib.minipic_diag
-
-path = ""
+from libminipic import diag as minipic_diag
 
 # Use argparse to parse arguments
 # -h for help
@@ -27,7 +17,7 @@ path = ""
 
 parser = argparse.ArgumentParser(description="Plot particle binning diag")
 
-parser.add_argument("-f", "--file", type=str, help="Path toward the diag binning file")
+parser.add_argument("file", type=str, help="Path toward the diag binning file")
 parser.add_argument(
     "-c", "--colormap", type=str, help="colormap to use", default="seismic"
 )
@@ -40,7 +30,7 @@ if not os.path.isfile(args.file):
     sys.exit()
 
 # Get the binning dimension
-dim = lib.minipic_diag.get_diag_dimension(args.file)
+dim = minipic_diag.get_diag_dimension(args.file)
 
 # Get the iteration number from the file name (diags_yyyyy.bin)
 iteration = int(args.file.split("_")[-1].split(".")[0])
@@ -50,7 +40,7 @@ print(" File path: ", args.file)
 print(" Colormap: ", args.colormap)
 print(" Iteration: ", iteration)
 
-x_axis, x, y_axis, y, z_axis, z, data_name, data_map = lib.minipic_diag.read_3d_diag(
+x_axis, x, y_axis, y, z_axis, z, data_name, data_map = minipic_diag.read_3d_diag(
     args.file
 )
 
