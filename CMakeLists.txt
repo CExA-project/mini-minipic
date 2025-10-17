@@ -34,10 +34,10 @@ message(" Build type: ${CMAKE_BUILD_TYPE}")
 # Debug and test modes
 option(MINIPIC_DEBUG "Debug messages" OFF)
 option(MINIPIC_WARNING "Warning mode" OFF)
-option(MINIPIC_TEST "Simulation test for CI" OFF)
 option(MINIPIC_BUILD "Compile minipic" ON)
 option(MINIPIC_UNIFIED_MEMORY "Use unified memory" OFF)
 set(MINIPIC_IMPLEMENTATION "exercise" CACHE STRING "Which implementation to use")
+set(MINIPIC_SETUP "antenna" CACHE STRING "Which setup to build and run with")
 
 message(" Minipic compilation: ${MINIPIC_BUILD}")
 
@@ -67,6 +67,12 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/${MINIPIC_IMPLEMENTATION}")
 endif()
 message(" Implementation: ${MINIPIC_IMPLEMENTATION}")
 
+# _________________________________________________________________
+# Setup
+
+string(TOUPPER "${MINIPIC_SETUP}" MINIPIC_SETUP_UPPER)
+message(" Setup: ${MINIPIC_SETUP}")
+
 message(" __________________________________________________________________ \n")
 
 # __________________________________________________________________
@@ -94,24 +100,14 @@ else()
 endif()
 
 # __________________________________________________________________
-
-# Specific behavior for test mode
-if(MINIPIC_TEST)
-  set(MAIN_PATH "./main.cpp")
-else()
-  set(MAIN_PATH "./src/main.cpp")
-endif()
-
-# __________________________________________________________________
 # Create executable with options
-
-file(GLOB SOURCES_COMMON "${CMAKE_CURRENT_SOURCE_DIR}/src/common/*.cpp")
 
 if(MINIPIC_BUILD)
   add_executable(
     minipic
-    ${SOURCES_COMMON}
-    ${MAIN_PATH}
+    "src/common/Params.cpp"
+    "src/common/Tools.cpp"
+    "src/main.cpp"
   )
   target_include_directories(
     minipic
@@ -125,6 +121,7 @@ if(MINIPIC_BUILD)
     PUBLIC
       $<$<BOOL:${MINIPIC_DEBUG}>:__MINIPIC_DEBUG__>
       $<$<BOOL:${MINIPIC_UNIFIED_MEMORY}>:__MINIPIC_KOKKOS_UNIFIED__>
+      __MINIPIC_SETUP_${MINIPIC_SETUP_UPPER}__
   )
   target_link_libraries(
     minipic

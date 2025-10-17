@@ -134,7 +134,9 @@ parser.add_argument(
     "-g",
     "--config",
     default="cpu-openmp",
-    help="configuration choice: {}, default to cpu-openmp".format(", ".join(configuration_list.keys())),
+    help="configuration choice: {}, default to cpu-openmp".format(
+        ", ".join(configuration_list.keys())
+    ),
 )
 parser.add_argument("-c", "--compiler", help="custom compiler choice")
 parser.add_argument(
@@ -151,7 +153,9 @@ parser.add_argument(
 )
 parser.add_argument("-a", "--arguments", help="default arguments", default=None)
 parser.add_argument(
-    "--fresh", help="whether to delete or not already existing files", action="store_true"
+    "--fresh",
+    help="whether to delete or not already existing files",
+    action="store_true",
 )
 parser.add_argument(
     "--clean", help="whether to delete or not the generated files", action="store_true"
@@ -376,35 +380,7 @@ for ib, benchmark in enumerate(selected_config["benchmarks"]):
         shutil.rmtree(bench_dir, ignore_errors=True)
     os.makedirs(bench_dir, exist_ok=True)
 
-    # # Go to the bench directory
-    # os.chdir(bench_dir)
-
-    # Copy the main from src
-    shutil.copy(os.path.join(root_dir, "src", "main.cpp"), bench_dir)
-
-    # Change include
-    main_file_path = os.path.join(bench_dir, "main.cpp")
-    with open(main_file_path, "r") as file:
-        main_file = file.readlines()
-
-    start_index = 0
-    while "Load a setup" not in main_file[start_index]:
-        start_index += 1
-
-    # start_index = main_file.index("Load a setup")
-
-    for iline in range(start_index + 1, len(main_file), 1):
-        if "#include" in main_file[iline]:
-            main_file[iline] = "\n"
-
-    main_file[start_index + 1] = '#include "{}.hpp" \n'.format(benchmark)
-
-    with open(main_file_path, "w") as file:
-        file.writelines(main_file)
-
-    # Compile
-
-    cmake_command = ["cmake", root_dir, "-DMINIPIC_TEST=ON"]
+    cmake_command = ["cmake", root_dir, "-DMINIPIC_SETUP={}".format(benchmark)]
     if compiler:
         cmake_command.append("-DCMAKE_CXX_COMPILER={}".format(compiler))
     cmake_command.extend(cmake)
