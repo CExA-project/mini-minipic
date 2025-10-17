@@ -36,17 +36,15 @@ public:
   //! Primal 0 / dual 1
   int dual_x_m, dual_y_m, dual_z_m;
 
-  //! Data linearized, 3rd dimension faster
-
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-
-  Kokkos::View<T ***> data_m;
-  typename decltype(data_m)::host_mirror_type data_m_h;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
 
   Kokkos::View<T ***, Kokkos::SharedSpace> data_m;
   Kokkos::View<T ***, Kokkos::SharedSpace>& data_m_h;
+
+#else
+
+  Kokkos::View<T ***> data_m;
+  typename decltype(data_m)::host_mirror_type data_m_h;
 
 #endif
 
@@ -57,7 +55,7 @@ public:
   //! \brief Default constructor - create an empty field
   // _________________________________________________________________________________________
   Field() : name_m("empty"), nx_m(0), ny_m(0), nz_m(0), dual_x_m(0), dual_y_m(0), dual_z_m(0)
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     , data_m_h(data_m)
 #endif
   {
@@ -83,7 +81,7 @@ public:
         const int dual_y,
         const int dual_z,
         const std::string name) 
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     : data_m_h(data_m)
 #endif
   {
@@ -100,7 +98,7 @@ public:
   //! \brief deep copy constructor
   // _________________________________________________________________________________________
   Field(const Field &f) 
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     : data_m_h(data_m)
 #endif
   {
@@ -145,10 +143,10 @@ public:
   // _________________________________________________________________________________________
   inline __attribute__((always_inline)) T &
   operator()(const int i, const int j, const int k) noexcept {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    return data_m_h(i, j, k);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     return data_m(i, j, k);
+#else
+    return data_m_h(i, j, k);
 #endif
   }
 
@@ -211,12 +209,12 @@ public:
       return;
     }
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    data_m = Kokkos::View<T ***>(name, nx, ny, nz);
-    data_m_h = create_mirror_view(data_m);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     data_m = Kokkos::View<T ***, Kokkos::SharedSpace>(name, nx, ny, nz);
     data_m_h = data_m;
+#else
+    data_m = Kokkos::View<T ***>(name, nx, ny, nz);
+    data_m_h = create_mirror_view(data_m);
 #endif
 
     fill(v, minipic::host);
@@ -255,13 +253,7 @@ public:
   template <class T_space> void fill(const mini_float v, const T_space) {
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-
-      Kokkos::deep_copy(data_m_h, v);
-
-      Kokkos::fence();
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
 
       typedef Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<3>>
         mdrange_policy;
@@ -272,6 +264,12 @@ public:
         KOKKOS_LAMBDA(const int ix, const int iy, const int iz) { data_ref(ix, iy, iz) = v; });
 
       Kokkos::fence();
+#else
+
+      Kokkos::deep_copy(data_m_h, v);
+
+      Kokkos::fence();
+
 #endif
 
       // ---> Device case
@@ -305,7 +303,9 @@ public:
                     std::is_same<T_space, minipic::Device>::value,
                   "T_space must be either minipic::Host or minipic::Device");
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
+    return data_m.data();
+#else
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
       return data_m_h.data();
     } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
@@ -313,8 +313,6 @@ public:
     } else {
       return data_m_h.data();
     }
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-    return data_m.data();
 #endif
   }
 
@@ -328,20 +326,7 @@ public:
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-
-      auto data_ref = data_m_h;
-      typedef Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<3>>
-        mdrange_policy;
-      Kokkos::parallel_reduce(
-        "sum_field_on_host",
-        mdrange_policy({0, 0, 0}, {nx_m, ny_m, nz_m}),
-        KOKKOS_LAMBDA(const int ix, const int iy, const int iz, T &local_sum) {
-          local_sum += Kokkos::pow(data_ref(ix, iy, iz), power);
-        },
-        sum);
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
 
       typedef Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<3>>
         mdrange_policy;
@@ -354,6 +339,20 @@ public:
           local_sum += Kokkos::pow(data_ref(ix, iy, iz), power);
         },
         sum);
+
+#else
+
+      auto data_ref = data_m_h;
+      typedef Kokkos::MDRangePolicy<Kokkos::DefaultHostExecutionSpace, Kokkos::Rank<3>>
+        mdrange_policy;
+      Kokkos::parallel_reduce(
+        "sum_field_on_host",
+        mdrange_policy({0, 0, 0}, {nx_m, ny_m, nz_m}),
+        KOKKOS_LAMBDA(const int ix, const int iy, const int iz, T &local_sum) {
+          local_sum += Kokkos::pow(data_ref(ix, iy, iz), power);
+        },
+        sum);
+
 #endif
 
       // ---> Device case
@@ -426,12 +425,12 @@ public:
   template <class T_from, class T_to> void sync(const T_from, const T_to) {
     // ---> Host to Device
     if constexpr (std::is_same<T_from, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifndef __MINIPIC_KOKKOS_UNIFIED__
       Kokkos::deep_copy(data_m, data_m_h);
 #endif
       // ---> Device to Host
     } else if constexpr (std::is_same<T_from, minipic::Device>::value) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifndef __MINIPIC_KOKKOS_UNIFIED__
       Kokkos::deep_copy(data_m_h, data_m);
 #endif
     }
@@ -441,15 +440,15 @@ public:
 // _________________________________________________________________________________________
 // Shortucts for the different backends
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-
-using device_field_t = Kokkos::View<mini_float ***>;
-using field_t        = typename device_field_t::host_mirror_type;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
 
 using device_field_t = Kokkos::View<mini_float ***, Kokkos::SharedSpace>;
 using field_t        = Kokkos::View<mini_float ***, Kokkos::SharedSpace>;
+
+#else
+
+using device_field_t = Kokkos::View<mini_float ***>;
+using field_t        = typename device_field_t::host_mirror_type;
 
 #endif
 

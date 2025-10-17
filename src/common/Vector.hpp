@@ -23,12 +23,12 @@ public:
   unsigned int size_;
 
   // Main data
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-  Kokkos::View<T *> data_;
-  typename decltype(data_)::host_mirror_type data_h_;
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
   Kokkos::View<T *, Kokkos::SharedSpace> data_;
   Kokkos::View<T *, Kokkos::SharedSpace>& data_h_;
+#else
+  Kokkos::View<T *> data_;
+  typename decltype(data_)::host_mirror_type data_h_;
 #endif
 
   // ______________________________________________________________________
@@ -36,13 +36,13 @@ public:
   //! \brief constructors
   // ______________________________________________________________________
   Vector() : size_(0)
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     , data_h_(data_)
 #endif
   {}
   
   Vector(unsigned int size) 
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     : data_h_(data_)
 #endif
   { 
@@ -56,7 +56,7 @@ public:
   //! \param[in] v default value
   // ______________________________________________________________________
   Vector(unsigned int size, T v) 
-#if defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     : data_h_(data_)
 #endif
   {
@@ -77,12 +77,12 @@ public:
   // ______________________________________________________________________
   void allocate(std::string name, unsigned int size) {
     size_ = size;
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    data_ = Kokkos::View<T *>(name, size);
-    data_h_ = Kokkos::create_mirror_view(data_);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     data_ = Kokkos::View<T *, Kokkos::SharedSpace>(name, size);
     data_h_ = data_;
+#else
+    data_ = Kokkos::View<T *>(name, size);
+    data_h_ = Kokkos::create_mirror_view(data_);
 #endif
   }
 
@@ -92,10 +92,10 @@ public:
   //! \return Host data accessor (if not device, point to the host data)
   // ______________________________________________________________________
   INLINE T &operator[](const int i) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    return data_h_(i);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     return data_(i);
+#else
+    return data_h_(i);
 #endif
   }
 
@@ -105,10 +105,10 @@ public:
   //! \return Host data accessor (if not device, point to the host data)
   // ______________________________________________________________________
   INLINE T &operator()(const int i) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    return data_h_(i);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     return data_(i);
+#else
+    return data_h_(i);
 #endif
   }
 
@@ -118,10 +118,10 @@ public:
   //! \return host pointer at index i
   // ______________________________________________________________________
   INLINE T &h(const int i) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    return data_h_(i);
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     return data_(i);
+#else
+    return data_h_(i);
 #endif
   }
 
@@ -140,10 +140,10 @@ public:
 
     // Host
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-      return data_h_.data();
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
       return data_.data();
+#else
+      return data_h_.data();
 #endif
 
       // Device
@@ -176,12 +176,12 @@ public:
                     std::is_same<T_space, minipic::Device>::value,
                   "Must be minipic::host or minipic::device");
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
+    Kokkos::resize(data_, new_size);
+    size_ = new_size;
+#else
     Kokkos::resize(data_, new_size);
     Kokkos::resize(data_h_, new_size);
-    size_ = new_size;
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-    Kokkos::resize(data_, new_size);
     size_ = new_size;
 #endif
 }
@@ -197,13 +197,13 @@ public:
 
     resize(new_size, space); // j'appele la méthode d'avant
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-    for (auto ip = size_; ip < new_size; ++ip) {
-      data_h_(ip) = value;
-    }
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
     for (auto ip = size_; ip < new_size; ++ip) {
       data_(ip) = value;
+    }
+#else
+    for (auto ip = size_; ip < new_size; ++ip) {
+      data_h_(ip) = value;
     }
 #endif
   }
@@ -229,24 +229,31 @@ public:
 
     // Host
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-      // Fill on host
-      for (auto i = 0; i < size_; ++i) {
-        data_h_(i) = v;
-      }
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
       Kokkos::Experimental::fill(Kokkos::DefaultHostExecutionSpace(),
                                  Kokkos::Experimental::begin(data_),
                                  Kokkos::Experimental::end(data_),
                                  v);
       Kokkos::fence();
+#else
+      // Fill on host
+      for (auto i = 0; i < size_; ++i) {
+        data_h_(i) = v;
+      }
 
 #endif
 
     } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
+
+      Kokkos::Experimental::fill(Kokkos::DefaultExecutionSpace(),
+                                 Kokkos::Experimental::begin(data_),
+                                 Kokkos::Experimental::end(data_),
+                                 v);
+
+      Kokkos::fence();
+#else
       // Kokkos::Experimental::fill(Kokkos::DefaultHostExecutionSpace(), data_m.h_view, 0.);
 
       // Fill on device
@@ -255,14 +262,6 @@ public:
 
       Kokkos::fence();
 
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-      Kokkos::Experimental::fill(Kokkos::DefaultExecutionSpace(),
-                                 Kokkos::Experimental::begin(data_),
-                                 Kokkos::Experimental::end(data_),
-                                 v);
-
-      Kokkos::fence();
 #endif
 
     } else {
@@ -282,7 +281,20 @@ public:
     // ---> Host case
     if constexpr (std::is_same<T_space, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
+
+      typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
+
+      auto& data_ref = data_;
+      Kokkos::parallel_reduce(
+        "sum",
+        range_policy(0, size_),
+        KOKKOS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_ref(i), power); },
+        sum);
+
+      Kokkos::fence();
+
+#else
 
       typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
 
@@ -295,27 +307,15 @@ public:
 
       Kokkos::fence();
 
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
-
-      typedef Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace> range_policy;
-
-      auto& data_ref = data_;
-      Kokkos::parallel_reduce(
-        "sum",
-        range_policy(0, size_),
-        KOKKOS_LAMBDA(const int i, T &lsum) { lsum += Kokkos::pow(data_ref(i), power); },
-        sum);
-
-      Kokkos::fence();
 #endif
 
       // ---> Device case
     } else if constexpr (std::is_same<T_space, minipic::Device>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
-      typename Kokkos::View<T *> view = data_;
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
       typename Kokkos::View<T *, Kokkos::SharedSpace> view = data_;
+#else
+      typename Kokkos::View<T *> view = data_;
 #endif
 
       Kokkos::parallel_reduce(
@@ -351,7 +351,7 @@ public:
     if constexpr (std::is_same<from, minipic::Host>::value &&
                   std::is_same<to, minipic::Device>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifndef __MINIPIC_KOKKOS_UNIFIED__
       Kokkos::deep_copy(data_, data_h_);
 #endif
 
@@ -359,7 +359,7 @@ public:
     } else if constexpr (std::is_same<from, minipic::Device>::value &&
                          std::is_same<to, minipic::Host>::value) {
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
+#ifndef __MINIPIC_KOKKOS_UNIFIED__
       Kokkos::deep_copy(data_h_, data_);
 #endif
     }
@@ -369,15 +369,16 @@ public:
 // _________________________________________________________________________
 // Shortcuts
 
-#if defined(__MINIPIC_KOKKOS_NON_UNIFIED__)
 
-using device_vector_t = Kokkos::View<mini_float *>;
-using vector_t        = typename device_vector_t::host_mirror_type;
-
-#elif defined(__MINIPIC_KOKKOS_UNIFIED__)
+#ifdef __MINIPIC_KOKKOS_UNIFIED__
 
 using vector_t        = Kokkos::View<mini_float *, Kokkos::SharedSpace>;
 using device_vector_t = Kokkos::View<mini_float *, Kokkos::SharedSpace>;
+
+#else
+
+using device_vector_t = Kokkos::View<mini_float *>;
+using vector_t        = typename device_vector_t::host_mirror_type;
 
 #endif
 

@@ -124,7 +124,7 @@ if(MINIPIC_BUILD)
     minipic
     PUBLIC
       $<$<BOOL:${MINIPIC_DEBUG}>:__MINIPIC_DEBUG__>
-      $<IF:$<BOOL${MINIPIC_UNIFIED_MEMORY}>,__MINIPIC_KOKKOS_UNIFIED__,__MINIPIC_KOKKOS_NON_UNIFIED__>
+      $<$<BOOL:${MINIPIC_UNIFIED_MEMORY}>:__MINIPIC_KOKKOS_UNIFIED__>
   )
   target_link_libraries(
     minipic
