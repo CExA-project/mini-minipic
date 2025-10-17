@@ -32,6 +32,7 @@ Here is a list of available options:
 | | `--save-timers` | Save the timers for each benchmark |
 | | `--env` | Custom environment variables for the execution |
 | | `--cmake-args` | Custom CMake arguments |
+| | `--cmake-args-add` | Append custom CMake arguments |
 
 ### Configurations
 

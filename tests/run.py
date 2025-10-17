@@ -173,15 +173,16 @@ parser.add_argument(
 parser.add_argument(
     "--prefix",
     help="add custom prefix for the execution, for instance srun",
-    default="",
 )
 parser.add_argument(
     "--env",
     help="add custom environment variables for the execution, for instance `OMP_PROC_BIND=spread`",
-    default="",
 )
 parser.add_argument(
-    "--cmake-args", help="add custom cmake arguments for the compilation", default=""
+    "--cmake-args", help="set custom cmake arguments for the compilation"
+)
+parser.add_argument(
+    "--cmake-args-add", help="add custom cmake arguments for the compilation"
 )
 args = parser.parse_args()
 
@@ -244,10 +245,15 @@ else:
     for i in range(len(selected_config["benchmarks"])):
         selected_config["args"].append("")
 
-# Add custom cmake arguments
+# Set custom cmake arguments
 if args.cmake_args:
 
     selected_config["cmake"] = args.cmake_args.split()
+
+# Add custom cmake arguments
+if args.cmake_args_add:
+    selected_config["cmake"].extend(args.cmake_args_add.split())
+
 
 # threshold
 threshold = args.threshold
