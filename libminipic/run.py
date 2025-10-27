@@ -159,7 +159,7 @@ def run():
         help=(
             "which implementation to use, 'kokkos' or 'exercise', default to 'exercise'"
         ),
-        default="exercise"
+        default="exercise",
     )
     parser.add_argument("-a", "--arguments", help="default arguments", default=None)
     parser.add_argument(
@@ -191,11 +191,11 @@ def run():
         help="add custom prefix for the execution, for instance srun",
     )
     parser.add_argument(
-            "-p",
-            "--path",
-            help="path where the CMakeLists.txt is, default to corrent working directory",
-            default=os.getcwd()
-            )
+        "-p",
+        "--path",
+        help="path where the CMakeLists.txt is, default to corrent working directory",
+        default=os.getcwd(),
+    )
     parser.add_argument(
         "--env",
         help="add custom environment variables for the execution, for instance `OMP_PROC_BIND=spread`",
