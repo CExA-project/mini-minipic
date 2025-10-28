@@ -18,8 +18,6 @@
 #include <math.h>
 #include <random>
 
-#include "Vector.hpp"
-
 // ________________________________________________________
 //
 //! \brief Represent an array of particles for 1 species
@@ -42,39 +40,54 @@ public:
   //! Species temperature
   T temperature_m;
 
+  //! Type of the Kokkos Views used to store particles information on the device
+  using view_t = Kokkos::View<T*>;
+
+  //! Type of the Kokkos Views used to store particles information on the host
+  using hostview_t = typename view_t::host_mirror_type;
+
   //! Particles positions in 3D
-  Vector<T> x_;
-  Vector<T> y_;
-  Vector<T> z_;
+  view_t x_;
+  hostview_t x_h_;
+  view_t y_;
+  hostview_t y_h_;
+  view_t z_;
+  hostview_t z_h_;
   //! Particles momentums in 3D
-  Vector<T> mx_;
-  Vector<T> my_;
-  Vector<T> mz_;
+  view_t mx_;
+  hostview_t mx_h_;
+  view_t my_;
+  hostview_t my_h_;
+  view_t mz_;
+  hostview_t mz_h_;
 
   //! Weights | Charge density (scalar)
   //! w0,w1,w2,...
-  Vector<T> weight_;
+  view_t weight_;
+  hostview_t weight_h_;
 
   //! Electric field interpolate
-  Vector<T> Ex_;
-  Vector<T> Ey_;
-  Vector<T> Ez_;
+  view_t Ex_;
+  hostview_t Ex_h_;
+  view_t Ey_;
+  hostview_t Ey_h_;
+  view_t Ez_;
+  hostview_t Ez_h_;
   //! Magnetic field interpolate
-  Vector<T> Bx_;
-  Vector<T> By_;
-  Vector<T> Bz_;
-
-  //! Inverse of Lorentz factor: to avoid recompute gamma between PIC steps
-  // Vector<T> gamma_inv_;
+  view_t Bx_;
+  hostview_t Bx_h_;
+  view_t By_;
+  hostview_t By_h_;
+  view_t Bz_;
+  hostview_t Bz_h_;
 
   //! This flag when false prevents the allocation of E and B fields
   bool with_electromagnetic_fields_ = true;
 
-
   //! \brief Gamma accessor using the momentum
   //! \param[in] ip particle index
   INLINE T gamma(unsigned int ip) {
-    return sqrt(1 + mx_.h(ip) * mx_.h(ip) + my_.h(ip) * my_.h(ip) + mz_.h(ip) * mz_.h(ip));
+    return sqrt(1 + mx_h_(ip) * mx_h_(ip) + my_h_(ip) * my_h_(ip) + mz_h_(ip) * mz_h_(ip));
   }
 
   // __________________________________________________________________________
@@ -91,25 +104,38 @@ public:
     mass_m        = m;
     temperature_m = t;
 
-    x_.allocate("x", n_particles);
-    y_.allocate("y", n_particles);
-    z_.allocate("z", n_particles);
+    x_ = Kokkos::View<T *>("x", n_particles);
+    x_h_ = Kokkos::create_mirror_view(x_);
+    y_ = Kokkos::View<T *>("y", n_particles);
+    y_h_ = Kokkos::create_mirror_view(y_);
+    z_ = Kokkos::View<T *>("z", n_particles);
+    z_h_ = Kokkos::create_mirror_view(z_);
 
-    mx_.allocate("mx", n_particles);
-    my_.allocate("my", n_particles);
-    mz_.allocate("mz", n_particles);
+    mx_ = Kokkos::View<T *>("mx", n_particles);
+    mx_h_ = Kokkos::create_mirror_view(mx_);
+    my_ = Kokkos::View<T *>("my", n_particles);
+    my_h_ = Kokkos::create_mirror_view(my_);
+    mz_ = Kokkos::View<T *>("mz", n_particles);
+    mz_h_ = Kokkos::create_mirror_view(mz_);
 
-    weight_.allocate("w", n_particles);
+    weight_ = Kokkos::View<T *>("weight", n_particles);
+    weight_h_ = Kokkos::create_mirror_view(weight_);
 
     // gamma_inv_.allocate("gamma_inv", n_particles);
 
-    Ex_.allocate("Ex", n_particles);
-    Ey_.allocate("Ey", n_particles);
-    Ez_.allocate("Ez", n_particles);
+    Ex_ = Kokkos::View<T *>("Ex", n_particles);
+    Ex_h_ = Kokkos::create_mirror_view(Ex_);
+    Ey_ = Kokkos::View<T *>("Ey", n_particles);
+    Ey_h_ = Kokkos::create_mirror_view(Ey_);
+    Ez_ = Kokkos::View<T *>("Ez", n_particles);
+    Ez_h_ = Kokkos::create_mirror_view(Ez_);
 
-    Bx_.allocate("Bx", n_particles);
-    By_.allocate("By", n_particles);
-    Bz_.allocate("Bz", n_particles);
+    Bx_ = Kokkos::View<T *>("Bx", n_particles);
+    Bx_h_ = Kokkos::create_mirror_view(Bx_);
+    By_ = Kokkos::View<T *>("By", n_particles);
+    By_h_ = Kokkos::create_mirror_view(By_);
+    Bz_ = Kokkos::View<T *>("Bz", n_particles);
+    Bz_h_ = Kokkos::create_mirror_view(Bz_);
   }
 
   // __________________________________________________________________________
@@ -123,25 +149,37 @@ public:
   //! \brief Delete all particles properties, keep species properties
   // __________________________________________________________________________
   void clear() {
+    Kokkos::resize(x_, 0);
+    Kokkos::resize(x_h_, 0);
+    Kokkos::resize(y_, 0);
+    Kokkos::resize(y_h_, 0);
+    Kokkos::resize(z_, 0);
+    Kokkos::resize(z_h_, 0);
 
-    x_.clear();
-    y_.clear();
-    z_.clear();
+    Kokkos::resize(mx_, 0);
+    Kokkos::resize(mx_h_, 0);
+    Kokkos::resize(my_, 0);
+    Kokkos::resize(my_h_, 0);
+    Kokkos::resize(mz_, 0);
+    Kokkos::resize(mz_h_, 0);
 
-    mx_.clear();
-    my_.clear();
-    mz_.clear();
-
-    weight_.clear();
+    Kokkos::resize(weight_, 0);
+    Kokkos::resize(weight_h_, 0);
 
     if (with_electromagnetic_fields_) {
-      Ex_.clear();
-      Ey_.clear();
-      Ez_.clear();
+      Kokkos::resize(Ex_, 0);
+      Kokkos::resize(Ex_h_, 0);
+      Kokkos::resize(Ey_, 0);
+      Kokkos::resize(Ey_h_, 0);
+      Kokkos::resize(Ez_, 0);
+      Kokkos::resize(Ez_h_, 0);
 
-      Bx_.clear();
-      By_.clear();
-      Bz_.clear();
+      Kokkos::resize(Bx_, 0);
+      Kokkos::resize(Bx_h_, 0);
+      Kokkos::resize(By_, 0);
+      Kokkos::resize(By_h_, 0);
+      Kokkos::resize(Bz_, 0);
+      Kokkos::resize(Bz_h_, 0);
     }
 
     n_particles_m = 0;
@@ -151,7 +189,7 @@ public:
   //
   //! \brief Realloc memory to store particles
   // __________________________________________________________________________
-  template <class T_space> void resize(int n_particles, const T_space space) {
+  void resize(int n_particles) {
 
     // We resize the vectors only if we can gain substantial memory
     // or need more space
@@ -162,24 +200,58 @@ public:
 
     if (n_particles > n_particles_m || (n_particles_m - n_particles) > min_threshold) {
 
-      x_.resize(n_particles, 0., space);
-      y_.resize(n_particles, 0., space);
-      z_.resize(n_particles, 0., space);
+      Kokkos::resize(x_, n_particles);
+      Kokkos::deep_copy(x_, 0.);
+      Kokkos::resize(x_h_, n_particles);
+      Kokkos::deep_copy(x_h_, 0.);
+      Kokkos::resize(y_, n_particles);
+      Kokkos::deep_copy(y_, 0.);
+      Kokkos::resize(y_h_, n_particles);
+      Kokkos::deep_copy(y_h_, 0.);
+      Kokkos::resize(z_, n_particles);
+      Kokkos::deep_copy(z_, 0.);
+      Kokkos::resize(z_h_, n_particles);
+      Kokkos::deep_copy(z_h_, 0.);
 
-      mx_.resize(n_particles, 0., space);
-      my_.resize(n_particles, 0., space);
-      mz_.resize(n_particles, 0., space);
-
-      weight_.resize(n_particles, 0., space);
+      Kokkos::resize(mx_, n_particles);
+      Kokkos::deep_copy(mx_, 0.);
+      Kokkos::resize(mx_h_, n_particles);
+      Kokkos::deep_copy(mx_h_, 0.);
+      Kokkos::resize(my_, n_particles);
+      Kokkos::deep_copy(my_, 0.);
+      Kokkos::resize(my_h_, n_particles);
+      Kokkos::deep_copy(my_h_, 0.);
+      Kokkos::resize(mz_, n_particles);
+      Kokkos::deep_copy(mz_, 0.);
+      Kokkos::resize(mz_h_, n_particles);
+      Kokkos::deep_copy(mz_h_, 0.);
 
       if (with_electromagnetic_fields_) {
-        Ex_.resize(n_particles, 0., space);
-        Ey_.resize(n_particles, 0., space);
-        Ez_.resize(n_particles, 0., space);
+        Kokkos::resize(Ex_, n_particles);
+        Kokkos::deep_copy(Ex_, 0.);
+        Kokkos::resize(Ex_h_, n_particles);
+        Kokkos::deep_copy(Ex_h_, 0.);
+        Kokkos::resize(Ey_, n_particles);
+        Kokkos::deep_copy(Ey_, 0.);
+        Kokkos::resize(Ey_h_, n_particles);
+        Kokkos::deep_copy(Ey_h_, 0.);
+        Kokkos::resize(Ez_, n_particles);
+        Kokkos::deep_copy(Ez_, 0.);
+        Kokkos::resize(Ez_h_, n_particles);
+        Kokkos::deep_copy(Ez_h_, 0.);
 
-        Bx_.resize(n_particles, 0., space);
-        By_.resize(n_particles, 0., space);
-        Bz_.resize(n_particles, 0., space);
+        Kokkos::resize(Bx_, n_particles);
+        Kokkos::deep_copy(Bx_, 0.);
+        Kokkos::resize(Bx_h_, n_particles);
+        Kokkos::deep_copy(Bx_h_, 0.);
+        Kokkos::resize(By_, n_particles);
+        Kokkos::deep_copy(By_, 0.);
+        Kokkos::resize(By_h_, n_particles);
+        Kokkos::deep_copy(By_h_, 0.);
+        Kokkos::resize(Bz_, n_particles);
+        Kokkos::deep_copy(Bz_, 0.);
+        Kokkos::resize(Bz_h_, n_particles);
+        Kokkos::deep_copy(Bz_h_, 0.);
       }
 
       // if (with_gamma_) {
@@ -203,28 +275,29 @@ public:
   //! \param[in] mz momentum of the particle to add
   // __________________________________________________________________________
   void set(int i, T w, T x, T y, T z, T mx, T my, T mz) {
-
     weight_[i] = w;
 
-    x_[i] = x;
-    y_[i] = y;
-    z_[i] = z;
+    x_h_[i] = x;
+    y_h_[i] = y;
+    z_h_[i] = z;
 
-    mx_[i] = mx;
-    my_[i] = my;
-    mz_[i] = mz;
+    mx_h_[i] = mx;
+    my_h_[i] = my;
+    mz_h_[i] = mz;
 
     // gamma_inv_[i] = 1 / sqrt(1 + mx * mx + my * my + mz * mz);
 
     if (with_electromagnetic_fields_) {
-      Ex_[i] = 0;
-      Ey_[i] = 0;
-      Ez_[i] = 0;
+      Ex_h_[i] = 0;
+      Ey_h_[i] = 0;
+      Ez_h_[i] = 0;
 
-      Bx_[i] = 0;
-      By_[i] = 0;
-      Bz_[i] = 0;
+      Bx_h_[i] = 0;
+      By_h_[i] = 0;
+      Bz_h_[i] = 0;
     }
+
+    sync(minipic::host, minipic::device);
   }
 
   // __________________________________________________________________________
@@ -236,11 +309,10 @@ public:
     T kinetic_energy = 0;
 
     if constexpr (std::is_same<T_space, minipic::Device>::value) {
-
-      device_vector_t w  = weight_.data_;
-      device_vector_t mx = mx_.data_;
-      device_vector_t my = my_.data_;
-      device_vector_t mz = mz_.data_;
+      auto w  = weight_;
+      auto mx = mx_;
+      auto my = my_;
+      auto mz = mz_;
 
       Kokkos::parallel_reduce(
         "kinetic_energy_on_device",
@@ -265,27 +337,56 @@ public:
   //
   //! \brief data transfer host <-> device
   // __________________________________________________________________________
-  template <class T_from, class T_to> void sync(const T_from from, const T_to to) {
+  template <class from, class to> void sync(const from&, const to&) {
+    // Check the combination of from and to:
+    // - from is minipic::Host then to is minipic::Device
+    // - from is minipic::Device then to is minipic::Host
+    static_assert(
+      !std::is_same<from, to>::value,
+      "Particles::sync: Invalid combination of from and to");
 
-    weight_.sync(from, to);
+    if constexpr (std::is_same<from, minipic::Host>::value &&
+                  std::is_same<to, minipic::Device>::value) {
+      // Host -> Device
+      Kokkos::deep_copy(x_, x_h_);
+      Kokkos::deep_copy(y_, y_h_);
+      Kokkos::deep_copy(z_, z_h_);
 
-    x_.sync(from, to);
-    y_.sync(from, to);
-    z_.sync(from, to);
+      Kokkos::deep_copy(mx_, mx_h_);
+      Kokkos::deep_copy(my_, my_h_);
+      Kokkos::deep_copy(mz_, mz_h_);
 
-    mx_.sync(from, to);
-    my_.sync(from, to);
-    mz_.sync(from, to);
+      Kokkos::deep_copy(weight_, weight_h_);
 
-    // gamma_inv_.sync(from, to);
+      Kokkos::deep_copy(Ex_, Ex_h_);
+      Kokkos::deep_copy(Ey_, Ey_h_);
+      Kokkos::deep_copy(Ez_, Ez_h_);
 
-    Ex_.sync(from, to);
-    Ey_.sync(from, to);
-    Ez_.sync(from, to);
+      Kokkos::deep_copy(Bx_, Bx_h_);
+      Kokkos::deep_copy(By_, By_h_);
+      Kokkos::deep_copy(Bz_, Bz_h_);
+    } else if constexpr (std::is_same<from, minipic::Device>::value &&
+                         std::is_same<to, minipic::Host>::value) {
+      // Device -> Host
+      Kokkos::deep_copy(x_h_, x_);
+      Kokkos::deep_copy(y_h_, y_);
+      Kokkos::deep_copy(z_h_, z_);
 
-    Bx_.sync(from, to);
-    By_.sync(from, to);
-    Bz_.sync(from, to);
+      Kokkos::deep_copy(mx_h_, mx_);
+      Kokkos::deep_copy(my_h_, my_);
+      Kokkos::deep_copy(mz_h_, mz_);
+
+      Kokkos::deep_copy(weight_h_, weight_);
+
+      Kokkos::deep_copy(Ex_h_, Ex_);
+      Kokkos::deep_copy(Ey_h_, Ey_);
+      Kokkos::deep_copy(Ez_h_, Ez_);
+
+      Kokkos::deep_copy(Bx_h_, Bx_);
+      Kokkos::deep_copy(By_h_, By_);
+      Kokkos::deep_copy(Bz_h_, Bz_);
+
+    }
   }
 
   // __________________________________________________________________________
@@ -381,8 +482,8 @@ private:
     T kinetic_energy = 0;
 
     for (size_t ip = 0; ip < size(); ++ip) {
-      const T gamma = sqrt(1. + mx_.h(ip) * mx_.h(ip) + my_.h(ip) * my_.h(ip) + mz_.h(ip) * mz_.h(ip));
-      kinetic_energy += weight_.h(ip) * (gamma - 1.);
+      const T gamma = sqrt(1. + mx_h_(ip) * mx_h_(ip) + my_h_(ip) * my_h_(ip) + mz_h_(ip) * mz_h_(ip));
+      kinetic_energy += weight_h_(ip) * (gamma - 1.);
     }
 
     return kinetic_energy;

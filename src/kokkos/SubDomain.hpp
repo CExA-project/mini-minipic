@@ -74,14 +74,14 @@ public:
     // ______________________________________________________
     // Particles
 
-    int n_species = params.get_species_number();
+    unsigned int n_species = params.get_species_number();
 
     // Alloc vector for each species
     if (n_species > 0) {
       particles_m.resize(n_species);
     }    
 
-    for (int is = 0; is < n_species; is++) {
+    for (unsigned int is = 0; is < n_species; is++) {
       int n_particles = params.n_particles_by_species[is] + params.particles_to_add_.size();
 
       // Alloc memory to store particles
@@ -102,9 +102,8 @@ public:
     // Needed for proper init with duplication
     std::vector<int> particles_per_cell_counter(n_species * total_cells);
 
-    for (int is = 0; is < n_species; is++) {
+    for (unsigned int is = 0; is < n_species; is++) {
 
-      int n_particles    = particles_m[is].size();
       double temperature = params.temp_[is];
       const double mass  = params.mass_[is];
 
@@ -116,7 +115,7 @@ public:
       unsigned int total_particles_counter = 0;
 
       // compute the species index for position init
-      int species_index_for_pos_init = 0;
+      unsigned int species_index_for_pos_init = 0;
       while (params.species_names_[species_index_for_pos_init] !=
               params.position_initialization_method_[is] &&
             (species_index_for_pos_init < is)) {
@@ -187,11 +186,11 @@ public:
                   // only initialize particle if the weight is positive
                   if (w > 1e-10) {
 
-                    particles_m[is].x_.h(ip) = x;
-                    particles_m[is].y_.h(ip) = y;
-                    particles_m[is].z_.h(ip) = z;
+                    particles_m[is].x_h_(ip) = x;
+                    particles_m[is].y_h_(ip) = y;
+                    particles_m[is].z_h_(ip) = z;
 
-                    particles_m[is].weight_.h(ip) = w * weight_coef;
+                    particles_m[is].weight_h_(ip) = w * weight_coef;
 
                     // increment the number of particles in this cell
                     ++particles_per_cell_counter[is * total_cells + local_cell_index];
@@ -210,18 +209,18 @@ public:
                   const auto ip = total_particles_counter + p;
 
                   // Position
-                  particles_m[is].x_.h(ip) = particles_m[species_index_for_pos_init].x_.h(ip);
-                  particles_m[is].y_.h(ip) = particles_m[species_index_for_pos_init].y_.h(ip);
-                  particles_m[is].z_.h(ip) = particles_m[species_index_for_pos_init].z_.h(ip);
+                  particles_m[is].x_h_(ip) = particles_m[species_index_for_pos_init].x_h_(ip);
+                  particles_m[is].y_h_(ip) = particles_m[species_index_for_pos_init].y_h_(ip);
+                  particles_m[is].z_h_(ip) = particles_m[species_index_for_pos_init].z_h_(ip);
 
                   // Get the density
                   const double w = params.density_profiles_[is](
-                    static_cast<double>(particles_m[is].x_.h(ip)) / params.Lx,
-                    static_cast<double>(particles_m[is].y_.h(ip)) / params.Ly,
-                    static_cast<double>(particles_m[is].z_.h(ip)) / params.Lz);
+                    static_cast<double>(particles_m[is].x_h_(ip)) / params.Lx,
+                    static_cast<double>(particles_m[is].y_h_(ip)) / params.Ly,
+                    static_cast<double>(particles_m[is].z_h_(ip)) / params.Lz);
 
                   // weight
-                  particles_m[is].weight_.h(ip) = w * weight_coef;
+                  particles_m[is].weight_h_(ip) = w * weight_coef;
 
                   // increment the number of particles in this cell
                   ++particles_per_cell_counter[is * total_cells + local_cell_index];
@@ -288,16 +287,16 @@ public:
 
                   } // here ends the corrections by Zenitani
 
-                  particles_m[is].mx_.h(ip) =
+                  particles_m[is].mx_h_(ip) =
                     -gamma * gamma_drift * vx + Lxx * mx + Lxy * my + Lxz * mz;
-                  particles_m[is].my_.h(ip) =
+                  particles_m[is].my_h_(ip) =
                     -gamma * gamma_drift * vy + Lxy * my + Lyy * my + Lyz * mz;
-                  particles_m[is].mz_.h(ip) =
+                  particles_m[is].mz_h_(ip) =
                     -gamma * gamma_drift * vz + Lxz * mz + Lyz * my + Lzz * mz;
                 } else {
-                  particles_m[is].mx_.h(ip) = mx;
-                  particles_m[is].my_.h(ip) = my;
-                  particles_m[is].mz_.h(ip) = mz;
+                  particles_m[is].mx_h_(ip) = mx;
+                  particles_m[is].my_h_(ip) = my;
+                  particles_m[is].mz_h_(ip) = mz;
                 }
 
               } // end for total_particles_counter
@@ -335,7 +334,7 @@ public:
       }
 
       // We resize the particles according to the real initialized number
-      particles_m[is].resize(total_particles_counter, minipic::host);
+      particles_m[is].resize(total_particles_counter);
 
       // Copy data initialized on host to device (if exist)
       particles_m[is].sync(minipic::host, minipic::device);
@@ -425,34 +424,34 @@ public:
       {"weight", "x", "y", "z", "mx", "my", "mz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
 
       for (size_t is = 0; is < params.species_names_.size(); ++is) {
+        sum_host[0] += operators::sum_host<double>(particles_m[is].weight_h_);
+        sum_host[1] += operators::sum_host<double>(particles_m[is].x_h_);
+        sum_host[2] += operators::sum_host<double>(particles_m[is].y_h_);
+        sum_host[3] += operators::sum_host<double>(particles_m[is].z_h_);
+        sum_host[4] += operators::sum_host<double>(particles_m[is].mx_h_);
+        sum_host[5] += operators::sum_host<double>(particles_m[is].my_h_);
+        sum_host[6] += operators::sum_host<double>(particles_m[is].mz_h_);
+        sum_host[7] += operators::sum_host<double>(particles_m[is].Ex_h_);
+        sum_host[8] += operators::sum_host<double>(particles_m[is].Ey_h_);
+        sum_host[9] += operators::sum_host<double>(particles_m[is].Ez_h_);
+        sum_host[10] += operators::sum_host<double>(particles_m[is].Bx_h_);
+        sum_host[11] += operators::sum_host<double>(particles_m[is].By_h_);
+        sum_host[12] += operators::sum_host<double>(particles_m[is].Bz_h_);
 
-        sum_host[0] += particles_m[is].weight_.sum(1, minipic::host);
-        sum_host[1] += particles_m[is].x_.sum(1, minipic::host);
-        sum_host[2] += particles_m[is].y_.sum(1, minipic::host);
-        sum_host[3] += particles_m[is].z_.sum(1, minipic::host);
-        sum_host[4] += particles_m[is].mx_.sum(1, minipic::host);
-        sum_host[5] += particles_m[is].my_.sum(1, minipic::host);
-        sum_host[6] += particles_m[is].mz_.sum(1, minipic::host);
-        sum_host[7] += particles_m[is].Ex_.sum(1, minipic::host);
-        sum_host[8] += particles_m[is].Ey_.sum(1, minipic::host);
-        sum_host[9] += particles_m[is].Ez_.sum(1, minipic::host);
-        sum_host[10] += particles_m[is].Bx_.sum(1, minipic::host);
-        sum_host[11] += particles_m[is].By_.sum(1, minipic::host);
-        sum_host[12] += particles_m[is].Bz_.sum(1, minipic::host);
+        sum_device[0] += operators::sum_device<double>(particles_m[is].weight_);
+        sum_device[1] += operators::sum_device<double>(particles_m[is].x_);
+        sum_device[2] += operators::sum_device<double>(particles_m[is].y_);
+        sum_device[3] += operators::sum_device<double>(particles_m[is].z_);
+        sum_device[4] += operators::sum_device<double>(particles_m[is].mx_);
+        sum_device[5] += operators::sum_device<double>(particles_m[is].my_);
+        sum_device[6] += operators::sum_device<double>(particles_m[is].mz_);
+        sum_device[7] += operators::sum_device<double>(particles_m[is].Ex_);
+        sum_device[8] += operators::sum_device<double>(particles_m[is].Ey_);
+        sum_device[9] += operators::sum_device<double>(particles_m[is].Ez_);
+        sum_device[10] += operators::sum_device<double>(particles_m[is].Bx_);
+        sum_device[11] += operators::sum_device<double>(particles_m[is].By_);
+        sum_device[12] += operators::sum_device<double>(particles_m[is].Bz_);
 
-        sum_device[0] += particles_m[is].weight_.sum(1, minipic::device);
-        sum_device[1] += particles_m[is].x_.sum(1, minipic::device);
-        sum_device[2] += particles_m[is].y_.sum(1, minipic::device);
-        sum_device[3] += particles_m[is].z_.sum(1, minipic::device);
-        sum_device[4] += particles_m[is].mx_.sum(1, minipic::device);
-        sum_device[5] += particles_m[is].my_.sum(1, minipic::device);
-        sum_device[6] += particles_m[is].mz_.sum(1, minipic::device);
-        sum_device[7] += particles_m[is].Ex_.sum(1, minipic::device);
-        sum_device[8] += particles_m[is].Ey_.sum(1, minipic::device);
-        sum_device[9] += particles_m[is].Ez_.sum(1, minipic::device);
-        sum_device[10] += particles_m[is].Bx_.sum(1, minipic::device);
-        sum_device[11] += particles_m[is].By_.sum(1, minipic::device);
-        sum_device[12] += particles_m[is].Bz_.sum(1, minipic::device);
       }
 
     std::cout << std::endl;

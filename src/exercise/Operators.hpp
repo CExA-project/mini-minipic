@@ -10,6 +10,29 @@
 
 namespace operators {
 
+// Returns the sum of all elements of a View on the host
+template <typename T>
+double sum_host(typename Particles<T>::hostview_t view) {
+  T res = 0.f;
+  for (size_t i=0; i < view.extent(0); ++i) {
+    res += view(i);
+  }
+  return res;
+}
+
+// Returns the sum of all elements of a View on the device
+template <typename T>
+double sum_device(typename Particles<T>::view_t view) {
+  T res;
+  Kokkos::parallel_reduce(Kokkos::RangePolicy(0, view.extent(0)),
+      KOKKOS_LAMBDA(const int i, double &partial_res){
+        partial_res += view(i);
+      }, res);
+
+  return res;
+}
+
+
 // ______________________________________________________________________________
 //
 //! \brief Interpolation operator :
@@ -37,17 +60,17 @@ auto interpolate(ElectroMagn &em, std::vector<Particles<mini_float>> &particles)
     field_t By = em.By_m.data_m_h;
     field_t Bz = em.Bz_m.data_m_h;
 
-    vector_t x = particles[is].x_.data_h_;
-    vector_t y = particles[is].y_.data_h_;
-    vector_t z = particles[is].z_.data_h_;
+    Particles<double>::hostview_t x = particles[is].x_h_;
+    Particles<double>::hostview_t y = particles[is].y_h_;
+    Particles<double>::hostview_t z = particles[is].z_h_;
 
-    vector_t Exp = particles[is].Ex_.data_h_;
-    vector_t Eyp = particles[is].Ey_.data_h_;
-    vector_t Ezp = particles[is].Ez_.data_h_;
+    Particles<double>::hostview_t Exp = particles[is].Ex_h_;
+    Particles<double>::hostview_t Eyp = particles[is].Ey_h_;
+    Particles<double>::hostview_t Ezp = particles[is].Ez_h_;
 
-    vector_t Bxp = particles[is].Bx_.data_h_;
-    vector_t Byp = particles[is].By_.data_h_;
-    vector_t Bzp = particles[is].Bz_.data_h_;
+    Particles<double>::hostview_t Bxp = particles[is].Bx_h_;
+    Particles<double>::hostview_t Byp = particles[is].By_h_;
+    Particles<double>::hostview_t Bzp = particles[is].Bz_h_;
 
     for (int part = 0; part < n_particles; ++part) {
       // // Calculate normalized positions
@@ -197,21 +220,21 @@ auto push(std::vector<Particles<mini_float>> &particles, double dt) -> void {
     // q' = dt * (q/2m)
     const mini_float qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    vector_t x = particles[is].x_.data_h_;
-    vector_t y = particles[is].y_.data_h_;
-    vector_t z = particles[is].z_.data_h_;
+    Particles<double>::hostview_t x = particles[is].x_h_;
+    Particles<double>::hostview_t y = particles[is].y_h_;
+    Particles<double>::hostview_t z = particles[is].z_h_;
 
-    vector_t mx = particles[is].mx_.data_h_;
-    vector_t my = particles[is].my_.data_h_;
-    vector_t mz = particles[is].mz_.data_h_;
+    Particles<double>::hostview_t mx = particles[is].mx_h_;
+    Particles<double>::hostview_t my = particles[is].my_h_;
+    Particles<double>::hostview_t mz = particles[is].mz_h_;
 
-    vector_t Exp = particles[is].Ex_.data_h_;
-    vector_t Eyp = particles[is].Ey_.data_h_;
-    vector_t Ezp = particles[is].Ez_.data_h_;
+    Particles<double>::hostview_t Exp = particles[is].Ex_h_;
+    Particles<double>::hostview_t Eyp = particles[is].Ey_h_;
+    Particles<double>::hostview_t Ezp = particles[is].Ez_h_;
 
-    vector_t Bxp = particles[is].Bx_.data_h_;
-    vector_t Byp = particles[is].By_.data_h_;
-    vector_t Bzp = particles[is].Bz_.data_h_;
+    Particles<double>::hostview_t Bxp = particles[is].Bx_h_;
+    Particles<double>::hostview_t Byp = particles[is].By_h_;
+    Particles<double>::hostview_t Bzp = particles[is].Bz_h_;
 
     for (int ip = 0; ip < n_particles; ++ip) {
         // 1/2 E
@@ -287,17 +310,17 @@ auto push_momentum(std::vector<Particles<mini_float>> &particles, double dt) -> 
     // q' = dt * (q/2m)
     const mini_float qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    vector_t mx = particles[is].mx_.data_h_;
-    vector_t my = particles[is].my_.data_h_;
-    vector_t mz = particles[is].mz_.data_h_;
+    Particles<double>::hostview_t mx = particles[is].mx_h_;
+    Particles<double>::hostview_t my = particles[is].my_h_;
+    Particles<double>::hostview_t mz = particles[is].mz_h_;
 
-    vector_t Exp = particles[is].Ex_.data_h_;
-    vector_t Eyp = particles[is].Ey_.data_h_;
-    vector_t Ezp = particles[is].Ez_.data_h_;
+    Particles<double>::hostview_t Exp = particles[is].Ex_h_;
+    Particles<double>::hostview_t Eyp = particles[is].Ey_h_;
+    Particles<double>::hostview_t Ezp = particles[is].Ez_h_;
 
-    vector_t Bxp = particles[is].Bx_.data_h_;
-    vector_t Byp = particles[is].By_.data_h_;
-    vector_t Bzp = particles[is].Bz_.data_h_;
+    Particles<double>::hostview_t Bxp = particles[is].Bx_h_;
+    Particles<double>::hostview_t Byp = particles[is].By_h_;
+    Particles<double>::hostview_t Bzp = particles[is].Bz_h_;
 
     for(int ip = 0; ip < n_particles; ++ip) {
       // 1/2 E
@@ -371,14 +394,14 @@ auto pushBC(Params &params, std::vector<Particles<mini_float>> &particles) -> vo
 
       unsigned int n_particles = particles[is].size();
 
-      vector_t x = particles[is].x_.data_h_;
-      vector_t y = particles[is].y_.data_h_;
-      vector_t z = particles[is].z_.data_h_;
+      Particles<double>::hostview_t x = particles[is].x_h_;
+      Particles<double>::hostview_t y = particles[is].y_h_;
+      Particles<double>::hostview_t z = particles[is].z_h_;
 
-      for (int part = 0; part < n_particles; ++part) {
+      for (unsigned int part = 0; part < n_particles; ++part) {
           mini_float *pos[3] = {&x(part), &y(part), &z(part)};
 
-          for (int d = 0; d < 3; d++) {
+          for (unsigned int d = 0; d < 3; d++) {
             if (*pos[d] >= sup_global[d]) {
 
               *pos[d] -= length[d];
@@ -400,20 +423,20 @@ auto pushBC(Params &params, std::vector<Particles<mini_float>> &particles) -> vo
 
       unsigned int n_particles = particles[is].size();
 
-      vector_t x = particles[is].x_.data_h_;
-      vector_t y = particles[is].y_.data_h_;
-      vector_t z = particles[is].z_.data_h_;
+      Particles<double>::hostview_t x = particles[is].x_h_;
+      Particles<double>::hostview_t y = particles[is].y_h_;
+      Particles<double>::hostview_t z = particles[is].z_h_;
 
-      vector_t mx = particles[is].mx_.data_h_;
-      vector_t my = particles[is].my_.data_h_;
-      vector_t mz = particles[is].mz_.data_h_;
+      Particles<double>::hostview_t mx = particles[is].mx_h_;
+      Particles<double>::hostview_t my = particles[is].my_h_;
+      Particles<double>::hostview_t mz = particles[is].mz_h_;
 
-      for(int part = 0; part < n_particles; ++part) {
+      for(unsigned int part = 0; part < n_particles; ++part) {
           mini_float *pos[3] = {&x(part), &y(part), &z(part)};
 
           mini_float *momentum[3] = {&mx(part), &my(part), &mz(part)};
 
-          for (int d = 0; d < 3; d++) {
+          for (unsigned int d = 0; d < 3; d++) {
 
             if (*pos[d] >= sup_global[d]) {
 
@@ -469,25 +492,20 @@ void project(Params &params, ElectroMagn &em, std::vector<Particles<mini_float>>
 
     const int n_particles            = particles[is].size();
     const double inv_cell_volume_x_q = params.inv_cell_volume * particles[is].charge_m;
-    // double m       = particles_m[is].mass_m;
 
-    vector_t w = particles[is].weight_.data_h_;
+    Particles<double>::hostview_t w = particles[is].weight_h_;
 
-    vector_t x = particles[is].x_.data_h_;
-    vector_t y = particles[is].y_.data_h_;
-    vector_t z = particles[is].z_.data_h_;
+    Particles<double>::hostview_t x = particles[is].x_h_;
+    Particles<double>::hostview_t y = particles[is].y_h_;
+    Particles<double>::hostview_t z = particles[is].z_h_;
 
-    vector_t mx = particles[is].mx_.data_h_;
-    vector_t my = particles[is].my_.data_h_;
-    vector_t mz = particles[is].mz_.data_h_;
+    Particles<double>::hostview_t mx = particles[is].mx_h_;
+    Particles<double>::hostview_t my = particles[is].my_h_;
+    Particles<double>::hostview_t mz = particles[is].mz_h_;
 
    for (int part = 0; part < n_particles; ++part) {
 
       // Delete if already compute by Pusher
-      // double usq = (moment[0]*moment[0] + moment[1]*moment[1] + moment[2]*moment[2]);
-      // double gamma = sqrt(1+usq);
-      // gamma_inv = 1/gamma;
-
       const double charge_weight = inv_cell_volume_x_q * w(part);
 
       const double gamma_inv =
@@ -510,14 +528,14 @@ void project(Params &params, ElectroMagn &em, std::vector<Particles<mini_float>>
       const double poszn = (z(part) - 0.5 * dt * vz) * inv_dz + 1;
 
       // Compute indexes in primal grid
-      const int ixp = (int)(Kokkos::floor(posxn)); //- i_patch_topology_m * nx_cells_m;
-      const int iyp = (int)(Kokkos::floor(posyn)); //- j_patch_topology_m * ny_cells_m;
-      const int izp = (int)(Kokkos::floor(poszn)); //- k_patch_topology_m * nz_cells_m;
+      const int ixp = (int)(Kokkos::floor(posxn));
+      const int iyp = (int)(Kokkos::floor(posyn));
+      const int izp = (int)(Kokkos::floor(poszn));
 
       // Compute indexes in dual grid
-      const int ixd = (int)Kokkos::floor(posxn - 0.5); //- i_patch_topology_m * nx_cells_m;
-      const int iyd = (int)Kokkos::floor(posyn - 0.5); //- j_patch_topology_m * ny_cells_m;
-      const int izd = (int)Kokkos::floor(poszn - 0.5); //- k_patch_topology_m * nz_cells_m;
+      const int ixd = (int)Kokkos::floor(posxn - 0.5);
+      const int iyd = (int)Kokkos::floor(posyn - 0.5);
+      const int izd = (int)Kokkos::floor(poszn - 0.5);
 
       // Projection particle on currant field
       // Compute interpolation coeff, p = primal, d = dual

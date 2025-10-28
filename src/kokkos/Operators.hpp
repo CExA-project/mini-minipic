@@ -10,6 +10,28 @@
 
 namespace operators {
 
+// Returns the sum of all elements of a View on the host
+template <class T>
+double sum_host(typename Particles<T>::hostview_t view) {
+  T res = 0.f;
+  for (size_t i=0; i < view.extent(0); ++i) {
+    res += view(i);
+  }
+  return res;
+}
+
+// Returns the sum of all elements of a View on the device
+template <class T>
+double sum_device(typename Particles<T>::view_t view) {
+  T res;
+  Kokkos::parallel_reduce(Kokkos::RangePolicy(0, view.extent(0)),
+      KOKKOS_LAMBDA(const int i, double &partial_res){
+        partial_res += view(i);
+      }, res);
+
+  return res;
+}
+
 // ______________________________________________________________________________
 //
 //! \brief Interpolation operator :
@@ -37,17 +59,17 @@ auto interpolate(ElectroMagn &em, std::vector<Particles<mini_float>> &particles)
     device_field_t By = em.By_m.data_m;
     device_field_t Bz = em.Bz_m.data_m;
 
-    device_vector_t x = particles[is].x_.data_;
-    device_vector_t y = particles[is].y_.data_;
-    device_vector_t z = particles[is].z_.data_;
+    Particles<double>::view_t x = particles[is].x_;
+    Particles<double>::view_t y = particles[is].y_;
+    Particles<double>::view_t z = particles[is].z_;
 
-    device_vector_t Exp = particles[is].Ex_.data_;
-    device_vector_t Eyp = particles[is].Ey_.data_;
-    device_vector_t Ezp = particles[is].Ez_.data_;
+    Particles<double>::view_t Exp = particles[is].Ex_;
+    Particles<double>::view_t Eyp = particles[is].Ey_;
+    Particles<double>::view_t Ezp = particles[is].Ez_;
 
-    device_vector_t Bxp = particles[is].Bx_.data_;
-    device_vector_t Byp = particles[is].By_.data_;
-    device_vector_t Bzp = particles[is].Bz_.data_;
+    Particles<double>::view_t Bxp = particles[is].Bx_;
+    Particles<double>::view_t Byp = particles[is].By_;
+    Particles<double>::view_t Bzp = particles[is].Bz_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -206,21 +228,21 @@ auto push(std::vector<Particles<mini_float>> &particles, double dt) -> void {
     const mini_float qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
     particles[is].sync(minipic::device, minipic::host);
-    device_vector_t x = particles[is].x_.data_;
-    device_vector_t y = particles[is].y_.data_;
-    device_vector_t z = particles[is].z_.data_;
+    Particles<double>::view_t x = particles[is].x_;
+    Particles<double>::view_t y = particles[is].y_;
+    Particles<double>::view_t z = particles[is].z_;
 
-    device_vector_t mx = particles[is].mx_.data_;
-    device_vector_t my = particles[is].my_.data_;
-    device_vector_t mz = particles[is].mz_.data_;
+    Particles<double>::view_t mx = particles[is].mx_;
+    Particles<double>::view_t my = particles[is].my_;
+    Particles<double>::view_t mz = particles[is].mz_;
 
-    device_vector_t Exp = particles[is].Ex_.data_;
-    device_vector_t Eyp = particles[is].Ey_.data_;
-    device_vector_t Ezp = particles[is].Ez_.data_;
+    Particles<double>::view_t Exp = particles[is].Ex_;
+    Particles<double>::view_t Eyp = particles[is].Ey_;
+    Particles<double>::view_t Ezp = particles[is].Ez_;
 
-    device_vector_t Bxp = particles[is].Bx_.data_;
-    device_vector_t Byp = particles[is].By_.data_;
-    device_vector_t Bzp = particles[is].Bz_.data_;
+    Particles<double>::view_t Bxp = particles[is].Bx_;
+    Particles<double>::view_t Byp = particles[is].By_;
+    Particles<double>::view_t Bzp = particles[is].Bz_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -297,17 +319,17 @@ auto push_momentum(std::vector<Particles<mini_float>> &particles, double dt) -> 
     // q' = dt * (q/2m)
     const mini_float qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    device_vector_t mx = particles[is].mx_.data_;
-    device_vector_t my = particles[is].my_.data_;
-    device_vector_t mz = particles[is].mz_.data_;
+    Particles<double>::view_t mx = particles[is].mx_;
+    Particles<double>::view_t my = particles[is].my_;
+    Particles<double>::view_t mz = particles[is].mz_;
 
-    device_vector_t Exp = particles[is].Ex_.data_;
-    device_vector_t Eyp = particles[is].Ey_.data_;
-    device_vector_t Ezp = particles[is].Ez_.data_;
+    Particles<double>::view_t Exp = particles[is].Ex_;
+    Particles<double>::view_t Eyp = particles[is].Ey_;
+    Particles<double>::view_t Ezp = particles[is].Ez_;
 
-    device_vector_t Bxp = particles[is].Bx_.data_;
-    device_vector_t Byp = particles[is].By_.data_;
-    device_vector_t Bzp = particles[is].Bz_.data_;
+    Particles<double>::view_t Bxp = particles[is].Bx_;
+    Particles<double>::view_t Byp = particles[is].By_;
+    Particles<double>::view_t Bzp = particles[is].Bz_;
 
     Kokkos::parallel_for(
       n_particles,
@@ -384,16 +406,16 @@ auto pushBC(Params &params, std::vector<Particles<mini_float>> &particles) -> vo
 
         unsigned int n_particles = particles[is].size();
 
-        device_vector_t x = particles[is].x_.data_;
-        device_vector_t y = particles[is].y_.data_;
-        device_vector_t z = particles[is].z_.data_;
+        Particles<double>::view_t x = particles[is].x_;
+        Particles<double>::view_t y = particles[is].y_;
+        Particles<double>::view_t z = particles[is].z_;
 
         Kokkos::parallel_for(
           n_particles,
           KOKKOS_LAMBDA(const int part) {
             mini_float *pos[3] = {&x(part), &y(part), &z(part)};
 
-            for (int d = 0; d < 3; d++) {
+            for (unsigned int d = 0; d < 3; d++) {
               if (*pos[d] >= sup_global[d]) {
 
                 *pos[d] -= length[d];
@@ -417,13 +439,13 @@ auto pushBC(Params &params, std::vector<Particles<mini_float>> &particles) -> vo
 
         unsigned int n_particles = particles[is].size();
 
-        device_vector_t x = particles[is].x_.data_;
-        device_vector_t y = particles[is].y_.data_;
-        device_vector_t z = particles[is].z_.data_;
+        Particles<double>::view_t x = particles[is].x_;
+        Particles<double>::view_t y = particles[is].y_;
+        Particles<double>::view_t z = particles[is].z_;
 
-        device_vector_t mx = particles[is].mx_.data_;
-        device_vector_t my = particles[is].my_.data_;
-        device_vector_t mz = particles[is].mz_.data_;
+        Particles<double>::view_t mx = particles[is].mx_;
+        Particles<double>::view_t my = particles[is].my_;
+        Particles<double>::view_t mz = particles[is].mz_;
 
         Kokkos::parallel_for(
           n_particles,
@@ -502,15 +524,15 @@ void project(Params &params, ElectroMagn &em, std::vector<Particles<mini_float>>
     const double inv_cell_volume_x_q = params.inv_cell_volume * particles[is].charge_m;
     // double m       = particles_m[is].mass_m;
 
-    device_vector_t w = particles[is].weight_.data_;
+    Particles<double>::view_t w = particles[is].weight_;
 
-    device_vector_t x = particles[is].x_.data_;
-    device_vector_t y = particles[is].y_.data_;
-    device_vector_t z = particles[is].z_.data_;
+    Particles<double>::view_t x = particles[is].x_;
+    Particles<double>::view_t y = particles[is].y_;
+    Particles<double>::view_t z = particles[is].z_;
 
-    device_vector_t mx = particles[is].mx_.data_;
-    device_vector_t my = particles[is].my_.data_;
-    device_vector_t mz = particles[is].mz_.data_;
+    Particles<double>::view_t mx = particles[is].mx_;
+    Particles<double>::view_t my = particles[is].my_;
+    Particles<double>::view_t mz = particles[is].mz_;
 
     Kokkos::parallel_for(
       n_particles,
