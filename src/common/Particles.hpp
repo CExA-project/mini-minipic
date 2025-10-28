@@ -275,29 +275,29 @@ public:
   //! \param[in] mz momentum of the particle to add
   // __________________________________________________________________________
   void set(int i, T w, T x, T y, T z, T mx, T my, T mz) {
-    // TODO: This can't work on the device
-
     weight_[i] = w;
 
-    x_[i] = x;
-    y_[i] = y;
-    z_[i] = z;
+    x_h_[i] = x;
+    y_h_[i] = y;
+    z_h_[i] = z;
 
-    mx_[i] = mx;
-    my_[i] = my;
-    mz_[i] = mz;
+    mx_h_[i] = mx;
+    my_h_[i] = my;
+    mz_h_[i] = mz;
 
     // gamma_inv_[i] = 1 / sqrt(1 + mx * mx + my * my + mz * mz);
 
     if (with_electromagnetic_fields_) {
-      Ex_[i] = 0;
-      Ey_[i] = 0;
-      Ez_[i] = 0;
+      Ex_h_[i] = 0;
+      Ey_h_[i] = 0;
+      Ez_h_[i] = 0;
 
-      Bx_[i] = 0;
-      By_[i] = 0;
-      Bz_[i] = 0;
+      Bx_h_[i] = 0;
+      By_h_[i] = 0;
+      Bz_h_[i] = 0;
     }
+
+    sync(minipic::host, minipic::device);
   }
 
   // __________________________________________________________________________
