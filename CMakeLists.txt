@@ -6,9 +6,9 @@
 
 cmake_minimum_required (VERSION 3.16)
 
-message(" __________________________________________________________________ \n")
-message(" CMakeList for Mini-PIC")
-message(" __________________________________________________________________ \n")
+message("------------------------------------------------------------------")
+message("CMakeList for Mini-PIC")
+message("------------------------------------------------------------------")
 
 # Disable in-source builds to prevent source tree corruption.
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
@@ -29,7 +29,7 @@ if(NOT CMAKE_BUILD_TYPE)
     FORCE
   )
 endif()
-message(" Build type: ${CMAKE_BUILD_TYPE}")
+message("Build type: ${CMAKE_BUILD_TYPE}")
 
 # Debug and test modes
 option(MINIPIC_DEBUG "Debug messages" OFF)
@@ -41,7 +41,7 @@ set(MINIPIC_SETUP "antenna" CACHE STRING "Which setup to build and run with (mus
 # _________________________________________________________________
 # Debug mode
 
-message(" Debug mode: ${MINIPIC_DEBUG}")
+message("Debug mode: ${MINIPIC_DEBUG}")
 
 # _________________________________________________________________
 # Warning mode
@@ -49,12 +49,12 @@ message(" Debug mode: ${MINIPIC_DEBUG}")
 if(MINIPIC_WARNING)
  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic")
 endif()
-message(" Warning mode: ${MINIPIC_WARNING}")
+message("Warning mode: ${MINIPIC_WARNING}")
 
 # _________________________________________________________________
 # Unified memory
 
-message(" Unified memory: ${MINIPIC_UNIFIED_MEMORY}")
+message("Unified memory: ${MINIPIC_UNIFIED_MEMORY}")
 
 # _________________________________________________________________
 # Implementation
@@ -63,7 +63,7 @@ set(IMPLEMENTATION_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/src/${MINIPIC_IMPLEMEN
 if(NOT EXISTS "${IMPLEMENTATION_DIRECTORY}")
   message(FATAL_ERROR "Cannot find implementation '${MINIPIC_IMPLEMENTATION}' in src/")
 endif()
-message(" Implementation: ${MINIPIC_IMPLEMENTATION}")
+message("Implementation: ${MINIPIC_IMPLEMENTATION}")
 
 # _________________________________________________________________
 # Setup
@@ -72,9 +72,9 @@ set(SETUP_FILE "${CMAKE_CURRENT_SOURCE_DIR}/src/setups/${MINIPIC_SETUP}.cpp")
 if(NOT EXISTS "${SETUP_FILE}")
     message(FATAL_ERROR "Cannot find setup file ${MINIPIC_SETUP}.cpp in src/setups/")
 endif()
-message(" Setup: ${MINIPIC_SETUP}")
+message("Setup: ${MINIPIC_SETUP}")
 
-message(" __________________________________________________________________ \n")
+message("------------------------------------------------------------------")
 
 # __________________________________________________________________
 # Project
