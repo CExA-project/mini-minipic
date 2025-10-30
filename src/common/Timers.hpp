@@ -172,14 +172,14 @@ public:
 
     total_time = pic_iteration_time + diags_time;
     percentage = pic_iteration_time / total_time * 100;
-    const string pic_iterations_name = "PIC iterations";
+    const std::string pic_iterations_name = "PIC iterations";
     printf("%21s |%11.6lf |%9.2lf %% |\n",
            pic_iterations_name.c_str(),
            pic_iteration_time,
            percentage);
 
     percentage = diags_time / total_time * 100;
-    const string diags_name = "Diagnostics";
+    const std::string diags_name = "Diagnostics";
     printf("%21s |%11.6lf |%9.2lf %% |\n", diags_name.c_str(), diags_time, percentage);
 
   }
