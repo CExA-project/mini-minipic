@@ -94,7 +94,7 @@ public:
 
     // Particle initialization
 
-    const int total_cells = params.nx_cells * params.ny_cells * params.nz_cells;
+    const unsigned int total_cells = params.nx_cells * params.ny_cells * params.nz_cells;
 
     const double cell_volume = params.cell_volume;
 
@@ -587,9 +587,7 @@ public:
                            params.antenna_profiles_[iantenna],
                            params.antenna_positions_[iantenna],
                            it * params.dt);
-
       }
-
 
       // Solve the Maxwell equation
       DEBUG("  -> start solve Maxwell")
@@ -734,6 +732,5 @@ public:
 
     return total_number_of_particles;
   }
-
 
 }; // end class

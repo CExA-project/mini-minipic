@@ -32,8 +32,6 @@
 // using mini_float = double;
 #define mini_float double
 
-using namespace std;
-
 // _____________________________________________________________________
 // Space class
 

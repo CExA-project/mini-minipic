@@ -279,8 +279,8 @@ void particle_binning(std::string diag_name,
             value = particles.mz_h_(ip);
           }
 
-          min_value[idim] = min(min_value[idim], static_cast<double>(value));
-          max_value[idim] = max(max_value[idim], static_cast<double>(value));
+          min_value[idim] = std::min(min_value[idim], static_cast<double>(value));
+          max_value[idim] = std::max(max_value[idim], static_cast<double>(value));
         } // end for each particles
 
       max_value[idim] *= 1.01;
