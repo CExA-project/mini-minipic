@@ -1,20 +1,29 @@
 # Setups
 
-Input parameters to run a miniPIC simulation must be provided before compiling via a specific header containing the `setup` function. the setup function then is used to initiate global parameters in the `Params` class.
+Input parameters to run a miniPIC simulation must be provided before compiling via a specific source file defining the `setup` function.
+The setup function is then used to initiate global parameters in the `Params` class.
 
 A list of setups can be found in the directory `src/setups/`.
 
-## List of parameters
+## Description of existing setups
 
-- `params.name` (`std::string`): name of the setup
-- `params.inf_x`, `params.inf_y`, `params.inf_z` (`double`): lower bounds of the domain
-- `params.sup_x`, `params.sup_y`, `params.sup_z` (`double`): upper bounds of the domain
-- `params.nx_patch`, `params.ny_patch`, `params.nz_patch` (`int`): number of patches in each direction
-- `params.nx_cells_by_patch`, `params.ny_cells_by_patch`, `params.nz_cells_by_patch` (`int`): number of cells per patch in each direction
-- `params.dt` (`double`): time step
-- `params.simulation_time` (`double`): simulation time (the total number of time steps is automatically determined `simulation_time / dt`)
+- `thermal`: A thermalized plasma of 262144 protons and 262144 neutrons (524288 particles) in a domain of 32 × 32 × 32 (32.768 × 10<sup>3</sup>) cells;
+- `beam`: A beam of 17171 protons and 17171 neutrons (34342 particles) in a domain of 32 × 32 × 32 (32.768 × 10<sup>3</sup>) cells;
+- `antenna`: An antenna without particles in a domain of 384 × 64 × 64 (1.572864 × 10<sup>6</sup>) cells.
 
-## Add a plasma
+## Setup API
+
+### List of parameters
+
+- `params.name` (`std::string`): name of the setup;
+- `params.inf_x`, `params.inf_y`, `params.inf_z` (`double`): lower bounds of the domain;
+- `params.sup_x`, `params.sup_y`, `params.sup_z` (`double`): upper bounds of the domain;
+- `params.nx_patch`, `params.ny_patch`, `params.nz_patch` (`int`): number of patches in each direction;
+- `params.nx_cells_by_patch`, `params.ny_cells_by_patch`, `params.nz_cells_by_patch` (`int`): number of cells per patch in each direction;
+- `params.dt` (`double`): time step;
+- `params.simulation_time` (`double`): simulation time (the total number of time steps is automatically determined `simulation_time / dt`);
+
+### Add a plasma
 
 Species can be added using the `add_species` method:
 
@@ -51,7 +60,7 @@ Species can be added using the `add_species` method:
 ```
 
 
-## Add diags
+### Add diags
 
 List of available diags:
 
