@@ -419,8 +419,7 @@ def run():
 
         if not compile_only:
 
-            current_env = {}
-            current_env.update(env)
+            current_env = env.copy()
 
             print_step("Execution")
 

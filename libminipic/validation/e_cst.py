@@ -62,9 +62,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
             reference_data[1],
             reference_data[1],
             "==",
-            "Number of particles in species_00.txt is not correct".format(
-                particles, reference_data[1]
-            ),
+            f"Number of particles in species_00.txt is not correct: {particles} instead of {reference_data[1]}",
         )
 
         minipic_ci.evaluate(
@@ -72,9 +70,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
             reference_data[2],
             threshold,
             "relative",
-            "Kinetic energy in species_00.txt is not correct".format(
-                energy, reference_data[2]
-            ),
+            f"Kinetic energy in species_00.txt is not correct: {energy}, {reference_data[2]}",
         )
 
     else:
