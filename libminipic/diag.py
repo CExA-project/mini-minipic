@@ -1,15 +1,16 @@
 """Functions to read minipic diags."""
 
+import json
+import os
 import struct
 
 import numpy as np
 
+from libminipic.exceptions import MissingFileMiniPICError, ValueMiniPICError
 
-# ________________________________
-#
-# Get file dimension
-# ________________________________
+
 def get_diag_dimension(path):
+    """Get file dimension."""
 
     with open(path, "rb") as file:
         content = file.read()
@@ -21,11 +22,8 @@ def get_diag_dimension(path):
     return dim
 
 
-# ________________________________
-#
-# Read file 1D
-# ________________________________
 def read_1d_diag(path):
+    """Read file 1D."""
 
     file = open(path, "rb")
 
@@ -38,7 +36,7 @@ def read_1d_diag(path):
     k += 4
 
     if dim != 1:
-        raise Exception("diag dimension should be 1 not {}.".format(dim))
+        raise ValueMiniPICError(f"diag dimension should be 1 not {dim}")
 
     data_name = (
         np.array(struct.unpack("16s", content[k : k + 16]))[0].decode("utf-8").strip()
@@ -66,15 +64,8 @@ def read_1d_diag(path):
     return x_axis_name, x_min, x_max, x_data, data_name, data
 
 
-# Read 2D structured grid
-
-# ________________________________
-#
-# Read 3D structured grid
-# ________________________________
-
-
 def read_3d_diag(path):
+    """Read 3D structured grid."""
 
     # Read file 3D
     file = open(path, "rb")
@@ -88,7 +79,7 @@ def read_3d_diag(path):
     k += 4
 
     if dim != 3:
-        raise Exception("diag dimension should be 3 not {}.".format(dim))
+        raise ValueMiniPICError(f"diag dimension should be 3 not {dim}")
 
     data_name = (
         np.array(struct.unpack("16s", content[k : k + 16]))[0].decode("utf-8").strip()
@@ -153,11 +144,8 @@ def read_3d_diag(path):
     )
 
 
-# ________________________________
-#
-# Read particle cloud
-# ________________________________
 def read_particle_cloud(path):
+    """Read particle cloud."""
 
     file = open(path, "rb")
 
@@ -200,19 +188,16 @@ def read_particle_cloud(path):
 
 # ________________________________
 #
-# Read timers
-#
-# Format: json
 # ________________________________
 
 
 def read_timers(path):
+    """Read timers.
 
-    import json
-
-    # check if the file exists
+    Format: json
+    """
     if not os.path.isfile(path):
-        raise Exception("File {} does not exist".format(path))
+        raise MissingFileMiniPICError(f"File {path} does not exist")
 
     with open(path) as f:
         data = json.load(f)

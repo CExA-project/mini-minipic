@@ -6,9 +6,11 @@ import numpy as np
 
 from libminipic import ci as minipic_ci
 from libminipic import diag as minipic_diag
+from libminipic.exceptions import IncorrectValueMiniPICError, MissingFileMiniPICError
+from libminipic.validate import THRESHOLD
 
 
-def validate(evaluate=True, threshold=1e-10):
+def validate(evaluate=True, threshold=THRESHOLD):
 
     # ______________________________________________________________________
     # Reference data
@@ -98,7 +100,7 @@ def validate(evaluate=True, threshold=1e-10):
     # Check that all output files exist
     for file in output_file_list:
         if not (os.path.exists("diags/" + file)):
-            minipic_ci.error("File {} not generated".format(file))
+            raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
     # Check scalars
@@ -210,10 +212,8 @@ def validate(evaluate=True, threshold=1e-10):
         if evaluate:
 
             if reference_data[ispecies][0] != iteration:
-                minipic_ci.error(
-                    "First iteration in species_{:02d}.txt is not correct".format(
-                        ispecies
-                    )
+                raise IncorrectValueMiniPICError(
+                    f"First iteration in species_{ispecies:02d}.txt is not correct"
                 )
 
             minipic_ci.evaluate(
@@ -266,10 +266,8 @@ def validate(evaluate=True, threshold=1e-10):
         if evaluate:
 
             if reference_data[ispecies][0] != iteration:
-                minipic_ci.error(
-                    "Last iteration in species_{:02d}.txt is not correct".format(
-                        ispecies
-                    )
+                raise IncorrectValueMiniPICError(
+                    f"Last iteration in species_{ispecies:02d}.txt is not correct"
                 )
 
             minipic_ci.evaluate(

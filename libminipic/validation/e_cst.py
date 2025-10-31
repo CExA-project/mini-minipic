@@ -6,9 +6,11 @@ import numpy as np
 
 from libminipic import ci as minipic_ci
 from libminipic import diag as minipic_diag
+from libminipic.exceptions import IncorrectValueMiniPICError, MissingFileMiniPICError
+from libminipic.validate import THRESHOLD
 
 
-def validate(evaluate=True, threshold=1e-10):
+def validate(evaluate=True, threshold=THRESHOLD):
 
     number_of_iterations = 50000
 
@@ -32,7 +34,7 @@ def validate(evaluate=True, threshold=1e-10):
     # Check that all output files exist
     for file in output_file_list:
         if not (os.path.exists("diags/" + file)):
-            raise ValueError("File {} not generated".format(file))
+            raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
     # Check final scalar for species
@@ -51,10 +53,8 @@ def validate(evaluate=True, threshold=1e-10):
     if evaluate:
 
         if reference_data[0] != iteration:
-            minipic_ci.error(
-                "Last iteration in species_00.txt is not correct".format(
-                    iteration, reference_data[0]
-                )
+            raise IncorrectValueMiniPICError(
+                f"Last iteration in species_00.txt is not correct: {iteration} instead of {reference_data[0]}"
             )
 
         minipic_ci.evaluate(
@@ -62,9 +62,7 @@ def validate(evaluate=True, threshold=1e-10):
             reference_data[1],
             reference_data[1],
             "==",
-            "Number of particles in species_00.txt is not correct".format(
-                particles, reference_data[1]
-            ),
+            f"Number of particles in species_00.txt is not correct: {particles} instead of {reference_data[1]}",
         )
 
         minipic_ci.evaluate(
@@ -72,9 +70,7 @@ def validate(evaluate=True, threshold=1e-10):
             reference_data[2],
             threshold,
             "relative",
-            "Kinetic energy in species_00.txt is not correct".format(
-                energy, reference_data[2]
-            ),
+            f"Kinetic energy in species_00.txt is not correct: {energy}, {reference_data[2]}",
         )
 
     else:

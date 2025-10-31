@@ -7,25 +7,30 @@ import sys
 from argparse import ArgumentParser
 from pathlib import Path
 
+from libminipic.ci import print_success
+from libminipic.exceptions import IncorrectFileMiniPICError, MissingFileMiniPICError
+
 CMAKE_CACHE_FILENAME = "CMakeCache.txt"
+
+THRESHOLD = 1e-10
 
 
 def detect_setup(path: Path) -> str:
     cmake_cache_file = path / CMAKE_CACHE_FILENAME
     if not cmake_cache_file.exists():
-        raise RuntimeError(f"Cannot find {cmake_cache_file}")
+        raise MissingFileMiniPICError(f"Cannot find {cmake_cache_file}")
 
     cmake_cache_content = cmake_cache_file.read_text()
     matcher = re.findall(r"MINIPIC_SETUP:STRING=(.*)", cmake_cache_content)
 
     if not matcher:
-        raise RuntimeError(f"Cannot find setup in {cmake_cache_file}")
+        raise IncorrectFileMiniPICError(f"Cannot find setup in {cmake_cache_file}")
 
     # return the first element, as we know there is at least one
     return matcher[0].strip()
 
 
-def validate_setup(path, setup=None, threshold=1e-10):
+def validate_setup(path, setup=None, threshold=THRESHOLD):
     if not setup:
         setup = detect_setup(path)
         print(f"Autodetected setup: {setup}")
@@ -35,17 +40,11 @@ def validate_setup(path, setup=None, threshold=1e-10):
     os.chdir(path)
 
     if not os.path.isdir("diags"):
-        raise RuntimeError(
-            "Directory diags should be present where you run this script"
-        )
+        raise MissingFileMiniPICError(f"Directory diags is not in {path}")
 
     module.validate(threshold)
 
-    print(f"\033[32mBenchmark `{setup}` tested with success \033[39m")
-
-    # force flush to see text on time
-    # especially useful on HPC
-    sys.stdout.flush()
+    print_success(f"Setup {setup} tested with success")
 
 
 def validate():
@@ -62,7 +61,10 @@ def validate():
         default=Path.cwd(),
     )
     parser.add_argument(
-        "--threshold", help="threshold for the validation", default=1e-10, type=float
+        "--threshold",
+        help="threshold for the validation",
+        default=THRESHOLD,
+        type=float,
     )
 
     args = parser.parse_args()

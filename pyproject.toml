@@ -6,6 +6,7 @@ dependencies = [
     "matplotlib>=3.10.7,<3.11.0",
     "numpy>=2.3.3,<2.4.0",
     "pandas>=2.3.3,<2.4.0",
+    "termcolor>=3.2.0,<3.3.0",
 ]
 
 [project.optional-dependencies]
@@ -15,8 +16,8 @@ dev = [
 ]
 
 [project.scripts]
-mini-run = "libminipic.run:run"
-mini-validate = "libminipic.validate:validate"
+mini-run = "libminipic.__main__:execute_run"
+mini-validate = "libminipic.__main__:execute_validate"
 
 [build-system]
 requires = ["setuptools >= 77.0.3"]

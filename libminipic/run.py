@@ -4,7 +4,6 @@
 # Imports
 
 import argparse
-import importlib
 import json
 import os
 import shutil
@@ -12,7 +11,8 @@ import subprocess
 import sys
 import time
 
-from libminipic.validate import validate_setup
+from libminipic.ci import print_command, print_step
+from libminipic.validate import THRESHOLD, validate_setup
 
 # ________________________________________________________________________________
 # Parameters
@@ -110,11 +110,6 @@ configuration_list = {
 }
 
 
-def print_line(size):
-    """Print a line of given size."""
-    print("".ljust(size, "-"))
-
-
 def run():
     config_description = "List of all configurations: \n\n"
 
@@ -181,7 +176,10 @@ def run():
         "--compile-only", help="if used, only compile the tests", action="store_true"
     )
     parser.add_argument(
-        "--threshold", help="threshold for the validation", default=1e-10, type=float
+        "--threshold",
+        help="threshold for the validation",
+        default=THRESHOLD,
+        type=float,
     )
     parser.add_argument(
         "--save-timers", help="save the timers for each setup", action="store_true"
@@ -295,7 +293,6 @@ def run():
     sys.path.append("{}".format(root_dir))
 
     # Terminal size
-    terminal_size = shutil.get_terminal_size().columns
 
     # Get the git hash in variable git_hash
     try:
@@ -330,8 +327,7 @@ def run():
     unique_id = time.strftime("%Y%m%d_%H:%M:%S") + "_" + pipeline_id + "_" + git_hash
 
     # Print some info
-    print_line(terminal_size)
-    print(" VALIDATION \n")
+    print_step("Summary", level=0)
 
     print(" Git branch: {}".format(git_branch))
     print(" Git hash: {}".format(git_hash))
@@ -377,12 +373,10 @@ def run():
 
         bench_dir = os.path.join(build_dir, setup)
 
-        print("")
-        print_line(terminal_size)
-        print("\n >>> Setup `{}` \n".format(setup))
+        print_step(f"Setup {setup}", level=0)
 
         # ____________________________________________________________________________
-        # Compilation
+        # Configuration
 
         # Create a directory for this setup
         if fresh:
@@ -401,15 +395,18 @@ def run():
 
         cmake_command.extend(cmake)
 
-        print("")
-        print("   -> Compilation")
-        print("")
-        print(" ".join(cmake_command))
+        print_step("Configuration")
+        print_command(cmake_command)
 
         subprocess.run(cmake_command, cwd=bench_dir, check=True)
 
+        # ____________________________________________________________________________
+        # Compilation
+
         make_command = ["cmake", "--build", bench_dir, "--parallel", "4"]
-        print(" ".join(make_command))
+
+        print_step("Compilation")
+        print_command(make_command)
 
         subprocess.run(make_command, check=True)
 
@@ -422,22 +419,18 @@ def run():
 
         if not compile_only:
 
-            current_env = {}
-            current_env.update(env)
+            current_env = env.copy()
 
-            print("")
-            print("   -> Execution ")
-            print("")
+            print_step("Execution")
 
             run_command = [
                 "./{}".format(executable_name),
                 *args,
             ]  # srun numactl --interleave=all
             if prefix:
-                run_command = [*(prefix.split()), *run_command]
+                run_command = [*prefix, *run_command]
 
-            env_str = " ".join("{}={}".format(k, v) for k, v in current_env.items())
-            print(env_str, " ".join(run_command))
+            print_command(run_command, env=current_env)
 
             subprocess.run(
                 run_command,
@@ -449,21 +442,27 @@ def run():
             # ____________________________________________________________________________
             # Check results
 
-            print("")
-            print("   -> Launch the validation process ")
-            print("")
+            print_step("Validation")
+            print_command(
+                [
+                    "mini-validate",
+                    "--path",
+                    bench_dir,
+                    "--setup",
+                    setup,
+                    "--threshold",
+                    threshold,
+                ]
+            )
 
             validate_setup(bench_dir, setup, threshold)
-            print_line(terminal_size)
 
             # ____________________________________________________________________________
             # Read timers (json format)
 
             if save_timers:
 
-                print("")
-                print("   -> Timers")
-                print("")
+                print_step("Timers")
 
                 with open(os.path.join(bench_dir, "timers.json")) as f:
                     raw_timers_dict = json.load(f)
@@ -515,7 +514,6 @@ def run():
 
         if clean and os.path.exists(bench_dir):
 
-            print("")
-            print("   -> Cleaning")
+            print_step("Cleanup")
 
             shutil.rmtree(bench_dir, ignore_errors=True)
