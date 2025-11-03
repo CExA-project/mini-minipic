@@ -2,13 +2,7 @@
 
 ## Domain decomposition
 
-For the moment, miniPIC does not support distributed memory parallelism.
-
-The domain is decomposed into patches using a 3D cartesian decomposition. Each patch is designed to be independent and can be computed in parallel. It represents a piece of the domain that contains the particles and the local current field grid.
-
-Maxwell's equations are solved at the domain scale.
-Therefore, electromagnetic fields grids are global.
-A reduction operation is performed to compute the global current grid from the local current grids.
+MiniPIC does not support distributed memory parallelism and contains a single domain.
 
 ## PIC loop steps
 
@@ -22,20 +16,16 @@ The figure below illustrates schematically the code design. It shows how the dif
 
 Each file provides either a set of functions, a namespace or a data container (class).
 
-| File                   | Where  |Description                                                                                 |
-|------------------------|--------|---------------------------------------------------------------------------------------------|
-| Headers                | common | Determine the best headers to use depending on the selected backend                         |
-| Backend                | common | Data container that contains backend specific parameters (often global) for parallelism     |
-| Vector                 | common | Vector class that mimics the std::vector with backend abstraction for both CPU and GPU      |
-| Field                  | common | Class that provides 3D arrays with backend abstraction for both CPU and GPU                 |
-| Particle               | common | Class that provides a particle container with backend abstraction for both CPU and GPU      |
-| ElectroMagn            | common | Class that provide a data container for electromagnetic and current grids                   |
-| Patch                  | common | Data container representing a patch entity (see patch decomposition)                        |
-| SubDomain              | model specific folders | SubDomain is a data container representing a domain piece                   |
-| Diagnostics            | common | Function to perform diagnostic output                                                       |
-| Operators              | model specific folders | Functions to perform the Particle-In-Cell loop (such as interpolator, pusher, projection, etc), this header is duplicated for each programming models |
-| Timers                 | common | Class that provide timer functionality to monitor the time and make statistics              |
-| Main                   | src    | Main source file for the global code structure                                              |
+| File        | Where                  | Description                                                                                               |
+|-------------|------------------------|-----------------------------------------------------------------------------------------------------------|
+| Headers     | `src/common`           | Determine the best headers to use depending on the selected backend                                       |
+| Particle    | `src/common`           | Class that provides a particle container based on Kokkos 1D views                                         |
+| ElectroMagn | `src/common`           | Class that provide an electromagnetic and current grids based on Kokkos 3D views                          |
+| Diagnostics | `src/common`           | Function to perform diagnostic output                                                                     |
+| Timers      | `src/common`           | Class that provide timer functionality                                                                    |
+| Main        | `src`                  | Main source file for the global code structure                                                            |
+| PICLoop     | implementation folders | Data container representing a domain piece                                                                |
+| Operators   | implementation folders | Functions to perform the Particle-In-Cell loop operations (such as interpolator, pusher, projection, etc) |
 
 ## Macros
 
