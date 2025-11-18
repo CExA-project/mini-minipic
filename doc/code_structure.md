@@ -6,13 +6,13 @@ MiniPIC does not support distributed memory parallelism and contains a single do
 
 ## PIC loop steps
 
-<img title="pic loop" alt="pic loop" src="./images/pic_loop.png" height="500">
+<img title="pic loop" alt="pic loop" src="./images/pic_loop.png" />
 
 ## Code design
 
 The figure below illustrates schematically the code design. It shows how the different classes are organized and how they interact with each other.
 
-<img title="code design" alt="code design" src="./images/code_design.png" height="700">
+<img title="code design" alt="code design" src="./images/code_design.png" />
 
 Each file provides either a set of functions, a namespace or a data container (class).
 
