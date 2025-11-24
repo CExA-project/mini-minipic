@@ -275,7 +275,7 @@ public:
   //! \param[in] mz momentum of the particle to add
   // __________________________________________________________________________
   void set(int i, double w, double x, double y, double z, double mx, double my, double mz) {
-    weight_m[i] = w;
+    weight_h_m[i] = w;
 
     x_h_m[i] = x;
     y_h_m[i] = y;
