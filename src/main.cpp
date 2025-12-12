@@ -15,6 +15,7 @@
 #include "Params.hpp"
 #include "SubDomain.hpp"
 #include "Setup.hpp"
+#include "Timers.hpp"
 
 //! Main function
 int main(int argc, char *argv[]) {

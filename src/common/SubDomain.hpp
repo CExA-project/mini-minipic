@@ -13,7 +13,6 @@
 #include "Particles.hpp"
 #include "Diagnostics.hpp"
 #include "Params.hpp"
-#include "Timers.hpp"
 #include "Managers.hpp"
 
 //! \brief Wrapper class to clean main
@@ -472,7 +471,6 @@ public:
   // ________________________________________________________________
   //! \brief Perform all diagnostics
   //! \param[in] Params&  global parameters
-  //! \param[in] Timers&  timers
   //! \param[in] int it iteration number
   // ________________________________________________________________
   void diagnostics(Params &params, int it) {
