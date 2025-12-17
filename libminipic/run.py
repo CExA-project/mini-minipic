@@ -37,7 +37,11 @@ configuration_list = {
             "-DCMAKE_BUILD_TYPE=Release",
             "-DKokkos_ENABLE_OPENMP=ON",
         ],
-        "env": {"OMP_PROC_BIND": "spread", "OMP_NUM_THREADS": "8"},
+        "env": {
+            "OMP_PROC_BIND": "spread",
+            "OMP_PLACES": "threads",
+            "OMP_NUM_THREADS": "8",
+        },
         "prefix": [],
         "exe_name": "mini-minipic",
         "setups": ["thermal", "beam", "antenna", "e_cst", "b_cst"],
@@ -162,7 +166,7 @@ def run():
         "--parallel",
         help="number of jobs to use for the compilation, default to 4",
         type=int,
-        default=4
+        default=4,
     )
     parser.add_argument("-a", "--arguments", help="default arguments", default=None)
     parser.add_argument(
