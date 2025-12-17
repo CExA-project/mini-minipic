@@ -1,13 +1,7 @@
-# __________________________________________________________________
-#
-# CMakeList for Mini-PIC
-# 
-# __________________________________________________________________
-
 cmake_minimum_required (VERSION 3.22)
 
 message("------------------------------------------------------------------")
-message("CMakeList for Mini-PIC")
+message("CMakeList for (mini)Mini-PIC")
 message("------------------------------------------------------------------")
 
 # Disable in-source builds to prevent source tree corruption.
