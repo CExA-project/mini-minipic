@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name=mini-minipic
+#SBATCH --output=%x.%J.out
+#SBATCH --error=%x.%J.err
 #SBATCH --nodes=1
-#SBATCH --output=output
-#SBATCH --error=error
 #SBATCH --time=00:15:00
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
@@ -30,4 +30,4 @@ fi
 
 # Launch the test
 
-mini-run -g gpu-a100
+mini-run -g gpu-a100 -s thermal_heavy

@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=mini-minipic
-#SBATCH --output=output
-#SBATCH --error=error
+#SBATCH --output=%x.%J.out
+#SBATCH --error=%x.%J.err
 #SBATCH --time=00:20:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

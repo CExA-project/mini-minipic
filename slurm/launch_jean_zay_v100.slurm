@@ -1,5 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=mini-minipic
+#SBATCH --output=%x.%J.out
+#SBATCH --error=%x.%J.err
 #SBATCH --qos=qos_gpu-dev
 #SBATCH --ntasks=1
 ##SBATCH --ntasks-per-node=1
@@ -7,8 +9,6 @@
 #SBATCH --gres=gpu:1
 #SBATCH --hint=nomultithread
 #SBATCH --time=00:20:00
-#SBATCH --output=output
-#SBATCH --error=error
 
 set -e
 

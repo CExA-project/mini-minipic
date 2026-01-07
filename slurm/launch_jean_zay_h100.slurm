@@ -1,13 +1,13 @@
 #!/bin/bash
 #SBATCH --job-name=mini-minipic
+#SBATCH --output=%x.%J.out
+#SBATCH --error=%x.%J.err
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=10
 #SBATCH --threads-per-core=1
 #SBATCH --gres=gpu:1
 #SBATCH --hint=nomultithread
 #SBATCH --time=00:20:00
-#SBATCH --output=output
-#SBATCH --error=error
 #SBATCH --constraint=h100
 
 set -e
