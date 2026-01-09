@@ -16,7 +16,7 @@ namespace operators {
 //! \returns Sum of all values.
 double sum_host(typename Particles::hostview_t view) {
   double res = 0.f;
-  for (size_t i=0; i < view.extent(0); ++i) {
+  for (std::size_t i=0; i < view.extent(0); ++i) {
     res += view(i);
   }
   return res;
@@ -81,9 +81,9 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
   const auto inv_dy_m = em.inv_dy_m;
   const auto inv_dz_m = em.inv_dz_m;
 
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     ElectroMagn::view_t Ex = em.Ex_m;
     ElectroMagn::view_t Ey = em.Ey_m;
@@ -251,9 +251,9 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 void push(std::vector<Particles> &particles, double dt) {
 
   // For each species
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
@@ -341,9 +341,9 @@ void push(std::vector<Particles> &particles, double dt) {
 void push_momentum(std::vector<Particles> &particles, double dt) {
 
   // for each species
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
@@ -425,8 +425,8 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
   if (params.boundary_condition_code == 1) {
     const double length[3] = {params.Lx, params.Ly, params.Lz};
 
-    for (size_t is = 0; is < particles.size(); is++) {
-      unsigned int n_particles = particles[is].size();
+    for (std::size_t is = 0; is < particles.size(); is++) {
+      std::size_t n_particles = particles[is].size();
 
       Particles::view_t x = particles[is].x_m;
       Particles::view_t y = particles[is].y_m;
@@ -445,7 +445,6 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
             }
           } // End loop on particles
         );
-          
 
       Kokkos::fence();
 
@@ -453,8 +452,8 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
 
     // Reflective conditions
   } else if (params.boundary_condition_code == 2) {
-    for (size_t is = 0; is < particles.size(); is++) {
-      unsigned int n_particles = particles[is].size();
+    for (std::size_t is = 0; is < particles.size(); is++) {
+      std::size_t n_particles = particles[is].size();
 
       Particles::view_t x = particles[is].x_m;
       Particles::view_t y = particles[is].y_m;
@@ -525,9 +524,9 @@ void project(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   int nz_Jy = em.Jy_m.nz_m;
 #endif
 
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles            = particles[is].size();
+    const std::size_t n_particles            = particles[is].size();
     const double inv_cell_volume_x_q = params.inv_cell_volume * particles[is].charge_m;
 
     Particles::view_t w = particles[is].weight_m;

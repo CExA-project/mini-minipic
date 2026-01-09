@@ -30,7 +30,7 @@ public:
   double inv_cell_volume_m;
 
   //! Number of particles at init
-  int n_particles_m;
+  std::size_t n_particles_m;
 
   //! Species electric charge
   double charge_m;
@@ -93,7 +93,7 @@ public:
   //
   //! \brief Alloc memory for a new species
   // __________________________________________________________________________
-  void allocate(double q, double m, double t, int n_particles, double icv) {
+  void allocate(double q, double m, double t, std::size_t n_particles, double icv) {
     inv_cell_volume_m = icv;
 
     n_particles_m = n_particles;
@@ -141,7 +141,7 @@ public:
   //
   //! \brief Give the number of particles
   // __________________________________________________________________________
-  unsigned int size() const { return n_particles_m; }
+  std::size_t size() const { return n_particles_m; }
 
   // __________________________________________________________________________
   //
@@ -188,7 +188,7 @@ public:
   //
   //! \brief Realloc memory to store particles
   // __________________________________________________________________________
-  void resize(int n_particles) {
+  void resize(std::size_t n_particles) {
 
     // We resize the vectors only if we can gain substantial memory
     // or need more space
@@ -393,7 +393,7 @@ public:
   //! \brief Print all particles properties
   // __________________________________________________________________________
   void print() {
-    for (int ip = 0; ip < n_particles_m; ++ip) {
+    for (std::size_t ip = 0; ip < n_particles_m; ++ip) {
       std::cerr << "" << ip << " - " << x_h_m(ip) << " " << y_h_m(ip) << " " << z_h_m(ip)
                 << " mx: " << mx_h_m(ip) << " my: " << my_h_m(ip) << " mz: " << mz_h_m(ip) << std::endl;
     }
@@ -405,7 +405,7 @@ public:
   // __________________________________________________________________________
   void check(double xmin, double xmax, double ymin, double ymax, double zmin, double zmax) {
 
-    for (int ip = 0; ip < n_particles_m; ++ip) {
+    for (std::size_t ip = 0; ip < n_particles_m; ++ip) {
 
       if ((x_h_m(ip) <= xmin) || (x_h_m(ip) >= xmax) || (y_h_m(ip) <= ymin) || (y_h_m(ip) >= ymax) ||
           (z_h_m(ip) <= zmin) || (z_h_m(ip) >= zmax)) {
@@ -442,7 +442,7 @@ public:
     double By_sum = 0;
     double Bz_sum = 0;
 
-    for (int ip = 0; ip < n_particles_m; ++ip) {
+    for (std::size_t ip = 0; ip < n_particles_m; ++ip) {
 
       x_sum += std::abs(x_h_m(ip));
       y_sum += std::abs(y_h_m(ip));
@@ -480,7 +480,7 @@ private:
   double get_kinetic_energy_on_host() {
     double kinetic_energy = 0;
 
-    for (size_t ip = 0; ip < size(); ++ip) {
+    for (std::size_t ip = 0; ip < size(); ++ip) {
       const double gamma = std::sqrt(1. + mx_h_m(ip) * mx_h_m(ip) + my_h_m(ip) * my_h_m(ip) + mz_h_m(ip) * mz_h_m(ip));
       kinetic_energy += weight_h_m(ip) * (gamma - 1.);
     }

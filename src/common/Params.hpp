@@ -149,7 +149,7 @@ public:
   //! Number of particles total for each species at init, computed
   std::vector<std::size_t> n_particles_by_species;
   //! Number of particles at init, computed
-  int n_particles;
+  std::size_t n_particles;
 
   //! list of particles to add at init
   std::vector<Particle> particles_to_add_m;
@@ -312,13 +312,13 @@ public:
     // Physics
     n_particles = 0;
     n_particles_by_species.resize(species_names_m.size());
-    for (size_t is = 0; is < species_names_m.size(); is++) {
+    for (std::size_t is = 0; is < species_names_m.size(); is++) {
       n_particles_by_species[is] =nx_cells * ny_cells * nz_cells * ppc_m[is];
       n_particles += n_particles_by_species[is];
     }
 
     // Check species initialization
-    for (size_t is = 0; is < species_names_m.size(); ++is) {
+    for (std::size_t is = 0; is < species_names_m.size(); ++is) {
 
       bool passed = false;
 
@@ -329,7 +329,7 @@ public:
       } else {
 
         // We check that the position init is one of the previous species
-        for (size_t is2 = 0; is2 < is; ++is2) {
+        for (std::size_t is2 = 0; is2 < is; ++is2) {
           if (position_initialization_method_m[is] == species_names_m[is2]) {
             passed = true;
           }
@@ -344,7 +344,7 @@ public:
     }
 
     // Check species init level (should be "cell" or "patch")
-    for (size_t is = 0; is < species_names_m.size(); ++is) {
+    for (std::size_t is = 0; is < species_names_m.size(); ++is) {
       if (position_initialization_level_m[is] != "cell" &&
           position_initialization_level_m[is] != "patch") {
         ERROR(" Position initialization level " << position_initialization_level_m[is]

@@ -19,7 +19,7 @@ void initialize(const Params &params, ElectroMagn &em, std::vector<Particles> &p
               << std::endl;
 
     em.sync(minipic::device, minipic::host);
-    for (size_t is = 0; is < particles.size(); ++is) {
+    for (std::size_t is = 0; is < particles.size(); ++is) {
       particles[is].sync(minipic::device, minipic::host);
     }
 
@@ -27,7 +27,7 @@ void initialize(const Params &params, ElectroMagn &em, std::vector<Particles> &p
     operators::push_momentum(particles, -0.5 * params.dt);
 
     em.sync(minipic::host, minipic::device);
-    for (size_t is = 0; is < particles.size(); ++is) {
+    for (std::size_t is = 0; is < particles.size(); ++is) {
       particles[is].sync(minipic::host, minipic::device);
     }
   }
@@ -44,7 +44,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   }
 
   em.sync(minipic::device, minipic::host);
-  for (size_t is = 0; is < particles.size(); ++is) {
+  for (std::size_t is = 0; is < particles.size(); ++is) {
     particles[is].sync(minipic::device, minipic::host);
   }
 
@@ -63,7 +63,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   DEBUG("  -> stop push");
 
   em.sync(minipic::host, minipic::device);
-  for (size_t is = 0; is < particles.size(); ++is) {
+  for (std::size_t is = 0; is < particles.size(); ++is) {
     particles[is].sync(minipic::host, minipic::device);
   }
 
@@ -76,7 +76,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
 
 #if defined(MINI_MINIPIC_DEBUG)
   // check particles
-  for (size_t is = 0; is < particles.size(); ++is) {
+  for (std::size_t is = 0; is < particles.size(); ++is) {
     particles[is].check(inf_m[0], sup_m[0],
                           inf_m[1], sup_m[1],
                           inf_m[2], sup_m[2]);
@@ -86,7 +86,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   // Projection in local field
   if (params.current_projection) {
 
-    for (size_t is = 0; is < particles.size(); ++is) {
+    for (std::size_t is = 0; is < particles.size(); ++is) {
       particles[is].sync(minipic::device, minipic::host);
     }
 
@@ -97,7 +97,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
 
     DEBUG("  ->  stop projection");
 
-    for (size_t is = 0; is < particles.size(); ++is) {
+    for (std::size_t is = 0; is < particles.size(); ++is) {
       particles[is].sync(minipic::host, minipic::device);
     }
   }
@@ -108,7 +108,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   if (params.current_projection || params.n_particles > 0) {
 
     em.sync(minipic::host, minipic::device);
-    for (size_t is = 0; is < particles.size(); ++is) {
+    for (std::size_t is = 0; is < particles.size(); ++is) {
       particles[is].sync(minipic::host, minipic::device);
     }
 
@@ -129,7 +129,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
     em.sync(minipic::device, minipic::host);
 
     // Generate a laser field with an antenna
-    for (size_t iantenna = 0; iantenna < params.antenna_profiles_m.size(); iantenna++) {
+    for (std::size_t iantenna = 0; iantenna < params.antenna_profiles_m.size(); iantenna++) {
       operators::antenna(params,
                          em,
                          params.antenna_profiles_m[iantenna],

@@ -18,7 +18,7 @@ namespace operators {
 //! \returns Sum of all values.
 double sum_host(typename Particles::hostview_t view) {
   double res = 0.f;
-  for (size_t i=0; i < view.extent(0); ++i) {
+  for (std::size_t i=0; i < view.extent(0); ++i) {
     res += view(i);
   }
   return res;
@@ -76,9 +76,9 @@ double sum_power(ElectroMagn::view_t v, const int power) {
 //! \param[in] particles  vector of particle species
 void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const unsigned int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     ElectroMagn::hostview_t Ex = em.Ex_h_m;
     ElectroMagn::hostview_t Ey = em.Ey_h_m;
@@ -88,7 +88,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
     ElectroMagn::hostview_t By = em.By_h_m;
     ElectroMagn::hostview_t Bz = em.Bz_h_m;
 
-    for (unsigned int part = 0; part < n_particles; ++part) {
+    for (std::size_t part = 0; part < n_particles; ++part) {
       // Calculate normalized positions
       const double ixn = particles[is].x_h_m(part) * em.inv_dx_m;
       const double iyn = particles[is].y_h_m(part) * em.inv_dy_m;
@@ -225,14 +225,14 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 //! \param[in] dt Time step to use for the pusher.
 void push(std::vector<Particles> &particles, double dt) {
   // For each species
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const unsigned int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    for (unsigned int ip = 0; ip < n_particles; ++ip) {
+    for (std::size_t ip = 0; ip < n_particles; ++ip) {
       // 1/2 E
       double px = qp * particles[is].Ex_h_m(ip);
       double py = qp * particles[is].Ey_h_m(ip);
@@ -292,14 +292,14 @@ void push(std::vector<Particles> &particles, double dt) {
 //! \param[in] dt Time step to use for the pusher.
 void push_momentum(std::vector<Particles> &particles, double dt) {
   // for each species
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles = particles[is].size();
+    const std::size_t n_particles = particles[is].size();
 
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    for(int ip = 0; ip < n_particles; ++ip) {
+    for(std::size_t ip = 0; ip < n_particles; ++ip) {
       // 1/2 E
       double px = qp * particles[is].Ex_h_m(ip);
       double py = qp * particles[is].Ey_h_m(ip);
@@ -361,8 +361,8 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
     // Periodic conditions
     const double length[3] = {params.Lx, params.Ly, params.Lz};
 
-    for (size_t is = 0; is < particles.size(); is++) {
-      unsigned int n_particles = particles[is].size();
+    for (std::size_t is = 0; is < particles.size(); is++) {
+        std::size_t n_particles = particles[is].size();
 
       Particles::view_t x = particles[is].x_m;
       Particles::view_t y = particles[is].y_m;
@@ -390,8 +390,8 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
 
   } else if (params.boundary_condition_code == 2) {
     // Reflective conditions
-    for (size_t is = 0; is < particles.size(); is++) {
-      unsigned int n_particles = particles[is].size();
+    for (std::size_t is = 0; is < particles.size(); is++) {
+      std::size_t n_particles = particles[is].size();
 
       Particles::view_t x = particles[is].x_m;
       Particles::view_t y = particles[is].y_m;
@@ -430,16 +430,16 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
 //! \param[in] em Electromagnetic fields.
 //! \param[in] particles Vector of species particles.
 void project(const Params &params, ElectroMagn &em, std::vector<Particles> &particles) {
-  for (size_t is = 0; is < particles.size(); is++) {
+  for (std::size_t is = 0; is < particles.size(); is++) {
 
-    const int n_particles            = particles[is].size();
+    const std::size_t n_particles            = particles[is].size();
     const double inv_cell_volume_x_q = params.inv_cell_volume * particles[is].charge_m;
 
     Particles::hostview_t mx = particles[is].mx_h_m;
     Particles::hostview_t my = particles[is].my_h_m;
     Particles::hostview_t mz = particles[is].mz_h_m;
 
-    for (int part = 0; part < n_particles; ++part) {
+    for (std::size_t part = 0; part < n_particles; ++part) {
       // Delete if already compute by Pusher
       const double charge_weight = inv_cell_volume_x_q * particles[is].weight_h_m(part);
 

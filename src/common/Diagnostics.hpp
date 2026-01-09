@@ -145,7 +145,7 @@ void output_vtk_structured_grid(const std::string& file_name,
               << "SCALARS " << projected_parameter.c_str() << " double 1\n"
               << "LOOKUP_TABLE default\n";
 
-  for (unsigned int i = 0; i < data_size; ++i) {
+  for (std::size_t i = 0; i < data_size; ++i) {
     binary_file << data[i] << " ";
   }
   binary_file.close();
@@ -196,7 +196,7 @@ void particle_binning(std::string& diag_name,
   const unsigned int dim = axis.size();
 
   // compute the total size of the diag grid
-  unsigned int diag_data_size = n_cells[0];
+  std::size_t diag_data_size = n_cells[0];
   for (unsigned int idim = 1; idim < dim; ++idim) {
     diag_data_size *= n_cells[idim];
   }
@@ -253,8 +253,8 @@ void particle_binning(std::string& diag_name,
         max_value[idim] = -1e9;
       }
 
-        const unsigned int n_particles = particles.size();
-        for (unsigned int ip = 0; ip < n_particles; ip++) {
+        const std::size_t n_particles = particles.size();
+        for (std::size_t ip = 0; ip < n_particles; ip++) {
 
           double value = 0.0;
 
@@ -301,10 +301,10 @@ void particle_binning(std::string& diag_name,
 
 
     // get number of particles to project
-    const unsigned int n_particles = particles.size();
+    const std::size_t n_particles = particles.size();
 
     // Compute data
-    for (unsigned int ip = 0; ip < n_particles; ip++) {
+    for (std::size_t ip = 0; ip < n_particles; ip++) {
 
       double value[3];
       bool inside_diag_data = true;
@@ -539,8 +539,8 @@ void particle_cloud(const std::string& diag_name,
     }
 
 
-      const unsigned int n_particles = particles.size();
-      for (unsigned int ip = 0; ip < n_particles; ++ip) {
+      const std::size_t n_particles = particles.size();
+      for (std::size_t ip = 0; ip < n_particles; ++ip) {
 
         binary_file.write((char *)(&particles.weight_h_m(ip)), sizeof(double));
 
@@ -582,8 +582,8 @@ void particle_cloud(const std::string& diag_name,
     vtk_file << std::endl;
     vtk_file << "POINTS " << number_of_particles << " float" << std::endl;
 
-      const unsigned int n_particles = particles.size();
-      for (unsigned int ip = 0; ip < n_particles; ++ip) {
+      const std::size_t n_particles = particles.size();
+      for (std::size_t ip = 0; ip < n_particles; ++ip) {
 
         vtk_file << particles.z_h_m(ip) << " "
                  << particles.y_h_m(ip) << " "
@@ -597,7 +597,7 @@ void particle_cloud(const std::string& diag_name,
     vtk_file << "SCALARS weight float" << std::endl;
     vtk_file << "LOOKUP_TABLE default" << std::endl;
 
-      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
+      for (std::size_t ip = 0; ip < particles.size(); ++ip) {
 
         vtk_file << particles.weight_h_m(ip) << " ";
 
@@ -611,7 +611,7 @@ void particle_cloud(const std::string& diag_name,
     vtk_file << "LOOKUP_TABLE default" << std::endl;
 
 
-      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
+      for (std::size_t ip = 0; ip < particles.size(); ++ip) {
 
         const double gamma =
           1 /
@@ -629,7 +629,7 @@ void particle_cloud(const std::string& diag_name,
     // Construction of the momentum vector
     vtk_file << std::endl;
     vtk_file << "VECTORS momentum float" << std::endl;
-      for (unsigned int ip = 0; ip < particles.size(); ++ip) {
+      for (std::size_t ip = 0; ip < particles.size(); ++ip) {
         vtk_file << particles.mx_h_m(ip) << " ";
         vtk_file << particles.my_h_m(ip) << " ";
         vtk_file << particles.mz_h_m(ip) << " ";

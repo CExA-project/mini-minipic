@@ -85,7 +85,7 @@ void iterate(const Params &params, ElectroMagn &em, std::vector<Particles> &part
   if (params.maxwell_solver) {
 
     // Generate a laser field with an antenna
-    for (size_t iantenna = 0; iantenna < params.antenna_profiles_m.size(); iantenna++) {
+    for (std::size_t iantenna = 0; iantenna < params.antenna_profiles_m.size(); iantenna++) {
       operators::antenna(params,
                          em,
                          params.antenna_profiles_m[iantenna],

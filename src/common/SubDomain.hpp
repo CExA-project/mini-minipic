@@ -72,15 +72,15 @@ public:
     // ______________________________________________________
     // Particles
 
-    unsigned int n_species = params.get_species_number();
+    std::size_t n_species = params.get_species_number();
 
     // Alloc vector for each species
     if (n_species > 0) {
       particles_m.resize(n_species);
     }
 
-    for (unsigned int is = 0; is < n_species; is++) {
-      int n_particles = params.n_particles_by_species[is] + params.particles_to_add_m.size();
+    for (std::size_t is = 0; is < n_species; is++) {
+        std::size_t n_particles = params.n_particles_by_species[is] + params.particles_to_add_m.size();
 
       // Alloc memory to store particles
       particles_m[is].allocate(params.charge_m[is],
@@ -92,7 +92,7 @@ public:
 
     // Particle initialization
 
-    const int total_cells = params.nx_cells * params.ny_cells * params.nz_cells;
+    const std::size_t total_cells = params.nx_cells * params.ny_cells * params.nz_cells;
 
     const double cell_volume = params.cell_volume;
 
@@ -100,7 +100,7 @@ public:
     // Needed for proper init with duplication
     std::vector<int> particles_per_cell_counter(n_species * total_cells);
 
-    for (unsigned int is = 0; is < n_species; is++) {
+    for (std::size_t is = 0; is < n_species; is++) {
 
       double temperature = params.temp_m[is];
       const double mass  = params.mass_m[is];
@@ -168,7 +168,7 @@ public:
               // Random Position init
               if (params.position_initialization_method_m[is] == "random") {
 
-                for (auto p = 0; p < particle_per_cell; ++p) {
+                for (std::size_t p = 0; p < particle_per_cell; ++p) {
 
                   const auto ip = total_particles_counter +
                                   particles_per_cell_counter[is * total_cells + local_cell_index];
@@ -199,7 +199,7 @@ public:
                 // Init at particle positions of species species_index_for_pos_init
               } else {
 
-                for (auto p = 0;
+                for (std::size_t p = 0;
                     p < particles_per_cell_counter[species_index_for_pos_init * total_cells +
                                                     local_cell_index];
                     ++p) {
@@ -226,7 +226,7 @@ public:
 
               } // end if param.position_initialization_method_m
 
-              for (auto p = 0; p < particles_per_cell_counter[is * total_cells + local_cell_index];
+              for (std::size_t p = 0; p < particles_per_cell_counter[is * total_cells + local_cell_index];
                  ++p) {
 
                 const auto ip = total_particles_counter + p;
@@ -310,7 +310,7 @@ public:
       } // end if position_initialization_level_m == cell
 
       // Add single particles
-      for (size_t ip = 0; ip < params.particles_to_add_m.size(); ++ip) {
+      for (std::size_t ip = 0; ip < params.particles_to_add_m.size(); ++ip) {
         if (params.particles_to_add_m[ip].is_m == is) {
 
           const double w = params.particles_to_add_m[ip].weight_m;
@@ -344,7 +344,7 @@ public:
 
     // For each species, print :
     // - total number of particles
-    for (size_t is = 0; is < params.species_names_m.size(); ++is) {
+    for (std::size_t is = 0; is < params.species_names_m.size(); ++is) {
       unsigned int total_number_of_particles = 0;
       double total_particle_energy           = 0;
 
@@ -413,7 +413,7 @@ public:
     static const std::string vector_name[13] =
       {"weight", "x", "y", "z", "mx", "my", "mz", "Ex", "Ey", "Ez", "Bx", "By", "Bz"};
 
-      for (size_t is = 0; is < params.species_names_m.size(); ++is) {
+      for (std::size_t is = 0; is < params.species_names_m.size(); ++is) {
         sum_host[0] += operators::sum_host(particles_m[is].weight_h_m);
         sum_host[1] += operators::sum_host(particles_m[is].x_h_m);
         sum_host[2] += operators::sum_host(particles_m[is].y_h_m);
@@ -483,13 +483,13 @@ public:
     // Determine species to copy from device to host
 
     bool *need_species = new bool[params.get_species_number()];
-    for (size_t is = 0; is < params.get_species_number(); ++is) {
+    for (std::size_t is = 0; is < params.get_species_number(); ++is) {
       need_species[is] = false;
     }
 
     for (auto particle_binning : params.particle_binning_properties_m) {
       if (!(it % particle_binning.period_m)) {
-        for (auto is : particle_binning.species_indexes_m) {
+        for (std::size_t is : particle_binning.species_indexes_m) {
           // if number of particles > 0
           need_species[is] = true;
         }
@@ -499,12 +499,12 @@ public:
     if ((params.particle_cloud_period < params.n_it) &&
         (!(it % params.particle_cloud_period) or (it == 0))) {
 
-      for (size_t is = 0; is < params.get_species_number(); ++is) {
+      for (std::size_t is = 0; is < params.get_species_number(); ++is) {
         need_species[is] = true;
       }
     }
 
-    for (size_t is = 0; is < params.get_species_number(); ++is) {
+    for (std::size_t is = 0; is < params.get_species_number(); ++is) {
       if (need_species[is]) {
           particles_m[is].sync(minipic::device, minipic::host);
       }
@@ -523,7 +523,7 @@ public:
     for (auto particle_binning : params.particle_binning_properties_m) {
 
       // for each species index of this diagnostic
-      for (auto is : particle_binning.species_indexes_m) {
+      for (std::size_t is : particle_binning.species_indexes_m) {
 
         if (!(it % particle_binning.period_m)) {
 
@@ -549,7 +549,7 @@ public:
     if ((params.particle_cloud_period < params.n_it) &&
         (!(it % params.particle_cloud_period) or (it == 0))) {
 
-      for (size_t is = 0; is < params.get_species_number(); ++is) {
+      for (std::size_t is = 0; is < params.get_species_number(); ++is) {
         Diags::particle_cloud("cloud", params, particles_m[is], is, it, params.particle_cloud_format);
       }
     }
@@ -561,7 +561,7 @@ public:
 
     // Scalars diagnostics
     if (!(it % params.scalar_diagnostics_period)) {
-      for (size_t is = 0; is < params.get_species_number(); ++is) {
+      for (std::size_t is = 0; is < params.get_species_number(); ++is) {
         Diags::scalars(params, particles_m[is], is, it);
       }
     }
@@ -581,7 +581,7 @@ public:
   unsigned int get_total_number_of_particles() {
     unsigned int total_number_of_particles = 0;
 
-    for (size_t is = 0; is < particles_m.size(); ++is) {
+    for (std::size_t is = 0; is < particles_m.size(); ++is) {
       total_number_of_particles += particles_m[is].size();
     }
 

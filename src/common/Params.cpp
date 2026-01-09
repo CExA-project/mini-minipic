@@ -46,7 +46,7 @@ void Params::add_particle_binning(const std::string& diag_name,
   }
 
   // Check that the species indexes exist
-  for (size_t i = 0; i < species_indexes.size(); i++) {
+  for (std::size_t i = 0; i < species_indexes.size(); i++) {
     if (species_indexes[i] >= static_cast<int>(species_names_m.size())) {
       ERROR("ERROR in the particle binning creation: The species index "
             << species_indexes[i] << " does not exist" << std::endl);
@@ -315,7 +315,7 @@ void Params::info() {
   std::cout << "   - space step: " << dx << " " << dy << " " << dz << std::endl;
 
   std::cout << std::endl;
-  for (size_t is = 0; is < get_species_number(); ++is) {
+  for (std::size_t is = 0; is < get_species_number(); ++is) {
 
     std::cout << " > Species " << is << ": " << species_names_m[is] << "\n"
               << "   - mass: " << mass_m[is] << "\n"
@@ -373,14 +373,14 @@ void Params::info() {
 
   if (N > 0) {
     std::cout << " > Particle binning: " << std::endl;
-    for (size_t id = 0; id < N; ++id) {
+    for (std::size_t id = 0; id < N; ++id) {
       auto dim = particle_binning_properties_m[id].axis_m.size();
       std::cout << "   - " << particle_binning_properties_m[id].name_m << " on species ";
       for (auto is : particle_binning_properties_m[id].species_indexes_m) {
         std::cout << is << " ";
       }
       std::cout << "\n";
-      for (size_t d = 0; d < dim; ++d) {
+      for (std::size_t d = 0; d < dim; ++d) {
         std::cout << "     * axis " << d << ": " << particle_binning_properties_m[id].axis_m[d]
                   << " [" << particle_binning_properties_m[id].min_m[d] << ", "
                   << particle_binning_properties_m[id].max_m[d] << ", "

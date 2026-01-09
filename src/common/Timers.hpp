@@ -66,7 +66,7 @@ public:
     accumulated_times.resize(sections.size());
 
     // initialize timers
-    for (size_t i = 0; i < sections.size() ; i++) {
+    for (std::size_t i = 0; i < sections.size() ; i++) {
       accumulated_times[i] = 0;
       temporary_times[i]   = T_clock::now();
     }
@@ -261,7 +261,7 @@ public:
       local_buffer << "    \"pic iteration\" : " << pic_iteration_time << ",\n";
       local_buffer << "    \"diags\" : " << diags_time << ",\n";
 
-      for (size_t itimer = 3; itimer < sections.size(); itimer++) {
+      for (std::size_t itimer = 3; itimer < sections.size(); itimer++) {
         local_buffer << "    \"" << sections[itimer].name << "\" : [";
           local_buffer << accumulated_times[first_index(sections[itimer])];
         if (itimer < sections.size() - 1) {
