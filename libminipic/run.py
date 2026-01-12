@@ -6,11 +6,11 @@
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
 import time
-import shlex
 
 from libminipic.ci import print_command, print_step
 from libminipic.validate import THRESHOLD, validate_setup
