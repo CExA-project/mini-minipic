@@ -516,8 +516,6 @@ public:
       << " -it  (--iterations) int: change the number of iterations\n"
       << " -dmin (--domain_min) double double double: change the domain minimum boundaries\n"
       << " -dmax (--domain_max) double double double: change the domain maximum boundaries\n"
-      << " -p   (--patches) int int int: number of patches per direction\n"
-      << " -cpp (--cells_per_patch) int int int: number of cells per patch per direction\n"
       << " -rs  (--random_seed) int: seed for random generator\n"
       << " -pp  (--print_period) int: iteration period for terminal printing\n"
       << " -stp (--save_timers_period) int: iteration period for timers saving\n"

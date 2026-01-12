@@ -40,3 +40,20 @@ Each file provides either a set of functions, a namespace or a data container (c
 |------------------------------------|--------------------------------------------------|
 | `MINI_MINIPIC_DEBUG`               | Enable verbose output                            |
 | `MINI_MINIPIC_KOKKOS_SCATTER_VIEW` | Use Kokkos scatter views for projection operator |
+
+## Command-line arguments
+
+The (mini)miniPIC binary accepts the following arguments:
+
+| Short argument | Long argument          | Value type             | Description                                  |
+|----------------|------------------------|------------------------|----------------------------------------------|
+| `-h`           | `--help`               |                        | print the help page for command line options |
+| `-it`          | `--iterations`         | `int`                  | change the number of iterations              |
+| `-dmin`        | `--domain_min`         | `double double double` | change the domain minimum boundaries         |
+| `-dmax`        | `--domain_max`         | `double double double` | change the domain maximum boundaries         |
+| `-rs`          | `--random_seed`        | `int`                  | seed for random generator                    |
+| `-pp`          | `--print_period`       | `int`                  | iteration period for terminal printing       |
+| `-stp`         | `--save_timers_period` | `int`                  | iteration period for timers saving           |
+| `-sts`         | `--save_timers_start`  | `int`                  | iteration start for timers saving            |
+
+Note that command line options overwrite setup parameters.
