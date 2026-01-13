@@ -38,9 +38,10 @@ Even better, you can use a virtual environment.
 </summary>
 
 ```sh
+pip3 install --user virtualenv  # this step may not be necessary
 python3 -m virtualenv --python python<x.y> $PWD/venv
 source venv/bin/activate
-pip install .
+pip install .  # notice it's just pip which is called now
 ```
 
 with `<x.y>` the version of Python.
