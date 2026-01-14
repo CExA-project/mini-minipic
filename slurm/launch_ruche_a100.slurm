@@ -4,6 +4,7 @@
 #SBATCH --error=%x.%J.err
 #SBATCH --nodes=1
 #SBATCH --time=00:15:00
+#SBATCH --reservation prouveurc_178
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 ##SBATCH -p gpu_test
@@ -30,4 +31,4 @@ fi
 
 # Launch the test
 
-mini-run -g gpu-a100 -s thermal_heavy
+mini-run --fresh -g gpu-a100 -s thermal

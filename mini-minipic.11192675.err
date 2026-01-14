@@ -1,0 +1,11 @@
+------------------------------------------------------------------
+CMakeList for (mini)Mini-PIC
+------------------------------------------------------------------
+Build type: Release
+Debug mode: OFF
+Warning mode: OFF
+Kokkos scatter view: OFF
+Implementation: exercise
+Setup: thermal
+------------------------------------------------------------------
+> mini-minipic finalized
