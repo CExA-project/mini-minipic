@@ -253,8 +253,6 @@ void push(std::vector<Particles> &particles, double dt) {
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    Kokkos::fence();
-
     Particles::view_t Ex_m = particles[is].Ex_m;
     Particles::view_t Ey_m = particles[is].Ey_m;
     Particles::view_t Ez_m = particles[is].Ez_m;
@@ -472,23 +470,43 @@ void pushBC(const Params &params, std::vector<Particles> &particles) {
 //! \param[in] particles Vector of species particles.
 void project(const Params &params, ElectroMagn &em,
              std::vector<Particles> &particles) {
+  em.sync(minipic::host, minipic::device);
+  for (std::size_t is = 0; is < particles.size(); ++is) {
+      particles[is].sync(minipic::host, minipic::device);
+  }
+  
   for (std::size_t is = 0; is < particles.size(); is++) {
 
     const std::size_t n_particles = particles[is].size();
     const double inv_cell_volume_x_q =
         params.inv_cell_volume * particles[is].charge_m;
 
-    Particles::hostview_t mx = particles[is].mx_h_m;
-    Particles::hostview_t my = particles[is].my_h_m;
-    Particles::hostview_t mz = particles[is].mz_h_m;
+    Particles::view_t mx = particles[is].mx_m;
+    Particles::view_t my = particles[is].my_m;
+    Particles::view_t mz = particles[is].mz_m;
+    
+    Particles::view_t x_m = particles[is].x_m;
+    Particles::view_t y_m = particles[is].y_m;
+    Particles::view_t z_m = particles[is].z_m;
+    
+    Particles::view_t weight_m = particles[is].weight_m;
 
-    for (std::size_t part = 0; part < n_particles; ++part) {
+    ElectroMagn::view_t Jx_m = em.Jx_m;
+    ElectroMagn::view_t Jy_m = em.Jy_m;
+    ElectroMagn::view_t Jz_m = em.Jz_m;
+    
+    const double params_dt     = params.dt;
+    const double params_inv_dx = params.inv_dx;
+    const double params_inv_dy = params.inv_dy;
+    const double params_inv_dz = params.inv_dz;
+
+    Kokkos::parallel_for(n_particles, KOKKOS_LAMBDA(const int part) {
       // Delete if already compute by Pusher
       const double charge_weight =
-          inv_cell_volume_x_q * particles[is].weight_h_m(part);
+          inv_cell_volume_x_q * weight_m(part);
 
       const double gamma_inv =
-          1 / std::sqrt(1 + (mx(part) * mx(part) + my(part) * my(part) +
+          1 / Kokkos::sqrt(1 + (mx(part) * mx(part) + my(part) * my(part) +
                              mz(part) * mz(part)));
 
       const double vx = mx(part) * gamma_inv;
@@ -505,24 +523,24 @@ void project(const Params &params, ElectroMagn &em,
       // current grids have 2 additional ghost cells (1 the min and 1 at the max
       // border) when the direction is primal
       const double posxn =
-          (particles[is].x_h_m(part) - 0.5 * params.dt * vx) * params.inv_dx +
+          (x_m(part) - 0.5 * params_dt * vx) * params_inv_dx +
           1;
       const double posyn =
-          (particles[is].y_h_m(part) - 0.5 * params.dt * vy) * params.inv_dy +
+          (y_m(part) - 0.5 * params_dt * vy) * params_inv_dy +
           1;
       const double poszn =
-          (particles[is].z_h_m(part) - 0.5 * params.dt * vz) * params.inv_dz +
+          (z_m(part) - 0.5 * params_dt * vz) * params_inv_dz +
           1;
 
       // Compute indexes in primal grid
-      const int ixp = (int)(std::floor(posxn));
-      const int iyp = (int)(std::floor(posyn));
-      const int izp = (int)(std::floor(poszn));
+      const int ixp = (int)(Kokkos::floor(posxn));
+      const int iyp = (int)(Kokkos::floor(posyn));
+      const int izp = (int)(Kokkos::floor(poszn));
 
       // Compute indexes in dual grid
-      const int ixd = (int)std::floor(posxn - 0.5);
-      const int iyd = (int)std::floor(posyn - 0.5);
-      const int izd = (int)std::floor(poszn - 0.5);
+      const int ixd = (int)Kokkos::floor(posxn - 0.5);
+      const int iyd = (int)Kokkos::floor(posyn - 0.5);
+      const int izd = (int)Kokkos::floor(poszn - 0.5);
 
       // Projection particle on currant field
       // Compute interpolation coeff, p = primal, d = dual
@@ -532,67 +550,53 @@ void project(const Params &params, ElectroMagn &em,
       coeffs[0] = posxn - 0.5 - ixd;
       coeffs[1] = posyn - iyp;
       coeffs[2] = poszn - izp;
+    
 
-      em.Jx_h_m(ixd, iyp, izp) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd, iyp, izp + 1) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd, iyp + 1, izp) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd, iyp + 1, izp + 1) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd + 1, iyp, izp) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd + 1, iyp, izp + 1) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd + 1, iyp + 1, izp) +=
-          (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jxp;
-      em.Jx_h_m(ixd + 1, iyp + 1, izp + 1) +=
-          (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jxp;
+      Kokkos::atomic_add(&Jx_m(ixd, iyp, izp)            , (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd, iyp, izp + 1)        , (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd, iyp + 1, izp)        , (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd, iyp + 1, izp + 1)    , (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd + 1, iyp, izp)        , (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd + 1, iyp, izp + 1)    , (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd + 1, iyp + 1, izp)    , (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jxp);
+      Kokkos::atomic_add(&Jx_m(ixd + 1, iyp + 1, izp + 1), (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jxp);
 
       coeffs[0] = posxn - ixp;
       coeffs[1] = posyn - 0.5 - iyd;
       coeffs[2] = poszn - izp;
 
-      em.Jy_h_m(ixp, iyd, izp) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp, iyd, izp + 1) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp, iyd + 1, izp) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp, iyd + 1, izp + 1) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp + 1, iyd, izp) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp + 1, iyd, izp + 1) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp + 1, iyd + 1, izp) +=
-          (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jyp;
-      em.Jy_h_m(ixp + 1, iyd + 1, izp + 1) +=
-          (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jyp;
+      Kokkos::atomic_add(&Jy_m(ixp, iyd, izp)            , (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp, iyd, izp + 1)        , (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp, iyd + 1, izp)        , (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp, iyd + 1, izp + 1)    , (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp + 1, iyd, izp)        , (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp + 1, iyd, izp + 1)    , (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp + 1, iyd + 1, izp)    , (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jyp);
+      Kokkos::atomic_add(&Jy_m(ixp + 1, iyd + 1, izp + 1), (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jyp);
 
       coeffs[0] = posxn - ixp;
       coeffs[1] = posyn - iyp;
       coeffs[2] = poszn - 0.5 - izd;
 
-      em.Jz_h_m(ixp, iyp, izd) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp, iyp, izd + 1) +=
-          (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp, iyp + 1, izd) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp, iyp + 1, izd + 1) +=
-          (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp + 1, iyp, izd) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp + 1, iyp, izd + 1) +=
-          (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp + 1, iyp + 1, izd) +=
-          (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jzp;
-      em.Jz_h_m(ixp + 1, iyp + 1, izd + 1) +=
-          (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jzp;
-    } // end for each particles
+      Kokkos::atomic_add(&Jz_m(ixp, iyp, izd)            , (1 - coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp, iyp, izd + 1)        , (1 - coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp, iyp + 1, izd)        , (1 - coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp, iyp + 1, izd + 1)    , (1 - coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp + 1, iyp, izd)        , (coeffs[0]) * (1 - coeffs[1]) * (1 - coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp + 1, iyp, izd + 1)    , (coeffs[0]) * (1 - coeffs[1]) * (coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp + 1, iyp + 1, izd)    , (coeffs[0]) * (coeffs[1]) * (1 - coeffs[2]) * Jzp);
+      Kokkos::atomic_add(&Jz_m(ixp + 1, iyp + 1, izd + 1), (coeffs[0]) * (coeffs[1]) * (coeffs[2]) * Jzp);
+    }); // end for each particles
+    
+    Kokkos::fence();
   }   // end for each species
+  
+  
+  em.sync(minipic::device, minipic::host);
+  for (std::size_t is = 0; is < particles.size(); ++is) {
+      particles[is].sync(minipic::device, minipic::host);
+  }
+  
 }
 
 //! \brief Solve Maxwell equations to compute EM fields.

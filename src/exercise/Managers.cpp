@@ -53,11 +53,6 @@ void iterate(const Params &params, ElectroMagn &em,
 
   DEBUG("  -> stop interpolate");
 
-  em.sync(minipic::device, minipic::host);
-  for (std::size_t is = 0; is < particles.size(); ++is) {
-      particles[is].sync(minipic::device, minipic::host);
-  }
-
   // Push all particles
   DEBUG("  -> start push ");
 
@@ -69,6 +64,11 @@ void iterate(const Params &params, ElectroMagn &em,
   DEBUG("  -> Patch 0: start pushBC");
 
   operators::pushBC(params, particles);
+
+  em.sync(minipic::device, minipic::host);
+  for (std::size_t is = 0; is < particles.size(); ++is) {
+      particles[is].sync(minipic::device, minipic::host);
+  }
 
   DEBUG("  -> stop pushBC");
 
