@@ -119,7 +119,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
     Kokkos::parallel_for(
     "interpolation_loop",
     n_particles,
-    KOKKOS_LAMBDA (int ip) {
+    KOKKOS_LAMBDA (int part) {
     //for (std::size_t part = 0; part < n_particles; ++part) {
       
       // Calculate normalized positions
