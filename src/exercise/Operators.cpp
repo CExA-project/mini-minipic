@@ -84,19 +84,32 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
     const std::size_t n_particles = particles[is].size();
 
-    ElectroMagn::hostview_t Ex = em.Ex_h_m;
-    ElectroMagn::hostview_t Ey = em.Ey_h_m;
-    ElectroMagn::hostview_t Ez = em.Ez_h_m;
+	Particles::view_t particle_x = particles[is].x_m;
+	Particles::view_t particle_y = particles[is].y_m;
+	Particles::view_t particle_z = particles[is].z_m;
 
-    ElectroMagn::hostview_t Bx = em.Bx_h_m;
-    ElectroMagn::hostview_t By = em.By_h_m;
-    ElectroMagn::hostview_t Bz = em.Bz_h_m;
+	Particles::view_t particle_Ex = particles[is].Ex_m;
+	Particles::view_t particle_Ey = particles[is].Ey_m;
+	Particles::view_t particle_Ez = particles[is].Ez_m;
 
-    for (std::size_t part = 0; part < n_particles; ++part) {
+	Particles::view_t particle_Bx = particles[is].Bx_m;
+	Particles::view_t particle_By = particles[is].By_m;
+	Particles::view_t particle_Bz = particles[is].Bz_m;
+
+    ElectroMagn::view_t Ex = em.Ex_m;
+    ElectroMagn::view_t Ey = em.Ey_m;
+    ElectroMagn::view_t Ez = em.Ez_m;
+
+    ElectroMagn::view_t Bx = em.Bx_m;
+    ElectroMagn::view_t By = em.By_m;
+    ElectroMagn::view_t Bz = em.Bz_m;
+
+    Kokkos::parallel_for(n_particles, KOKKOS_LAMBDA(const int part) 
+    {
       // Calculate normalized positions
-      const double ixn = particles[is].x_h_m(part) * em.inv_dx_m;
-      const double iyn = particles[is].y_h_m(part) * em.inv_dy_m;
-      const double izn = particles[is].z_h_m(part) * em.inv_dz_m;
+      const double ixn = particle_x(part) * em.inv_dx_m;
+      const double iyn = particle_y(part) * em.inv_dy_m;
+      const double izn = particle_z(part) * em.inv_dz_m;
 
       // Compute indexes in global primal grid
       const unsigned int ixp = floor(ixn);
@@ -126,7 +139,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].Ex_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_Ex(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
 
       // Ey (p, d, p)
@@ -144,7 +157,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].Ey_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_Ey(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
 
       // Ez (p, p, d)
@@ -162,7 +175,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].Ez_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_Ez(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
 
       // interpolation magnetic field
@@ -181,7 +194,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].Bx_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_Bx(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
 
       // By (d, p, d)
@@ -199,7 +212,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].By_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_By(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
 
       // Bz (d, d, p)
@@ -217,10 +230,12 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         const double v0 = v00 * (1 - coeffs[1]) + v10 * coeffs[1];
         const double v1 = v01 * (1 - coeffs[1]) + v11 * coeffs[1];
 
-        particles[is].Bz_h_m(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
+        particle_Bz(part) = v0 * (1 - coeffs[2]) + v1 * coeffs[2];
       }
-    } // End for each particle
-
+    }); // End for each particle
+	
+	 Kokkos::fence();
+	
   } // Species loop
 }
 
@@ -236,15 +251,32 @@ void push(std::vector<Particles> &particles, double dt) {
     // q' = dt * (q/2m)
     const double qp = particles[is].charge_m * dt * 0.5 / particles[is].mass_m;
 
-    for (std::size_t ip = 0; ip < n_particles; ++ip) {
-      // 1/2 E
-      double px = qp * particles[is].Ex_h_m(ip);
-      double py = qp * particles[is].Ey_h_m(ip);
-      double pz = qp * particles[is].Ez_h_m(ip);
+	Particles::view_t Ex_m = particles[is].Ex_m;
+	Particles::view_t Ey_m = particles[is].Ey_m;
+	Particles::view_t Ez_m = particles[is].Ez_m;
 
-      const double ux = particles[is].mx_h_m(ip) + px;
-      const double uy = particles[is].my_h_m(ip) + py;
-      const double uz = particles[is].mz_h_m(ip) + pz;
+	Particles::view_t Bx_m = particles[is].Bx_m;
+	Particles::view_t By_m = particles[is].By_m;
+	Particles::view_t Bz_m = particles[is].Bz_m;
+
+	Particles::view_t x_m = particles[is].x_m;
+	Particles::view_t y_m = particles[is].y_m;
+	Particles::view_t z_m = particles[is].z_m;
+
+	Particles::view_t mx_m = particles[is].mx_m;
+	Particles::view_t my_m = particles[is].my_m;
+	Particles::view_t mz_m = particles[is].mz_m;
+
+    Kokkos::parallel_for(n_particles, KOKKOS_LAMBDA(const int ip) 
+    {
+      // 1/2 E
+      double px = qp * Ex_m(ip);
+      double py = qp * Ey_m(ip);
+      double pz = qp * Ez_m(ip);
+
+      const double ux = mx_m(ip) + px;
+      const double uy = my_m(ip) + py;
+      const double uz = mz_m(ip) + pz;
 
       // gamma-factor
       double usq = (ux * ux + uy * uy + uz * uz);
@@ -252,9 +284,9 @@ void push(std::vector<Particles> &particles, double dt) {
       double gamma_inv = qp / gamma;
 
       // B, T = Transform to rotate the particle
-      const double tx = gamma_inv * particles[is].Bx_h_m(ip);
-      const double ty = gamma_inv * particles[is].By_h_m(ip);
-      const double tz = gamma_inv * particles[is].Bz_h_m(ip);
+      const double tx = gamma_inv * Bx_m(ip);
+      const double ty = gamma_inv * By_m(ip);
+      const double tz = gamma_inv * Bz_m(ip);
       const double tsq = 1. + (tx * tx + ty * ty + tz * tz);
       double tsq_inv = 1. / tsq;
 
@@ -279,15 +311,17 @@ void push(std::vector<Particles> &particles, double dt) {
       gamma_inv = 1 / gamma;
 
       // Update momentum
-      particles[is].mx_h_m(ip) = px;
-      particles[is].my_h_m(ip) = py;
-      particles[is].mz_h_m(ip) = pz;
+      mx_m(ip) = px;
+      my_m(ip) = py;
+      mz_m(ip) = pz;
 
       // Update positions
-      particles[is].x_h_m(ip) += particles[is].mx_h_m(ip) * dt * gamma_inv;
-      particles[is].y_h_m(ip) += particles[is].my_h_m(ip) * dt * gamma_inv;
-      particles[is].z_h_m(ip) += particles[is].mz_h_m(ip) * dt * gamma_inv;
-    }
+      x_m(ip) += mx_m(ip) * dt * gamma_inv;
+      y_m(ip) += my_m(ip) * dt * gamma_inv;
+      z_m(ip) += mz_m(ip) * dt * gamma_inv;
+    });
+    
+    Kokkos::fence();
   } // Loop on species
 }
 
