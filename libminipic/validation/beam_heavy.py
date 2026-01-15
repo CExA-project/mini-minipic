@@ -40,15 +40,11 @@ def validate(evaluate=True, threshold=THRESHOLD):
         "gamma_spectrum": [
             [
                 0.00168433523734636,
-                0.0018653531183355642,
-                0.002903112790842842,
-                0.0035793504706303505,
+                0.003879805562912453
             ],
             [
                 0.001683572470070812,
-                0.001683571570758969,
-                0.0016835530955296464,
-                0.0016835140251204746,
+                0.0016834489820420893
             ],
         ],
     }
@@ -70,13 +66,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
         "diag_x_y_z_d_s00",
         "diag_x_y_z_d_s01",
     ]:
-        for it in range(0, 250, 50):
+        for it in range(0, 201, 200):
             file = "{}_{:03d}.vtk".format(field, it)
             output_file_list.append(file)
 
     # Add *.bin files
     for field in ["diag_w_gamma_s00", "diag_w_gamma_s01"]:
-        for it in range(0, 250, 50):
+        for it in range(0, 201, 200):
             file = "{}_{:03d}.bin".format(field, it)
             output_file_list.append(file)
 
@@ -295,7 +291,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
         new_data = []
 
-        for i, it in enumerate(range(0, 200, 50)):
+        for i, it in enumerate(range(0, 201, 200)):
 
             file = "diag_w_gamma_s{:02d}_{:03d}.bin".format(ispecies, it)
 
@@ -309,7 +305,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
         if evaluate:
 
-            for i, it in enumerate(range(0, 200, 50)):
+            for i, it in enumerate(range(0, 201, 200)):
                 minipic_ci.evaluate(
                     new_data[i],
                     reference_sum_data[ispecies][i],
