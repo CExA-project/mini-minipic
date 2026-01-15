@@ -31,13 +31,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
         "diag_px_py_pz_d_s00",
         "diag_px_py_pz_d_s01",
     ]:
-        for it in range(0, 200, 50):
+        for it in range(0, 200, 200):
             file = "{}_{:03d}.vtk".format(field, it)
             output_file_list.append(file)
 
     # Add *.bin files
     for field in ["cloud_s00", "cloud_s01", "diag_w_gamma_s00", "diag_w_gamma_s01"]:
-        for it in range(0, 200, 50):
+        for it in range(200, 200, 200):
             file = "{}_{:03d}.bin".format(field, it)
             output_file_list.append(file)
 
@@ -269,7 +269,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
         new_data = []
 
-        for i, it in enumerate(range(0, 200, 50)):
+        for i, it in enumerate(range(0, 200, 200)):
 
             file = "diag_w_gamma_s{:02d}_{:03d}.bin".format(ispecies, it)
 
@@ -282,7 +282,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
         print("    - For species {}: {}".format(ispecies, new_data))
 
         if evaluate:
-            for i, it in enumerate(range(0, 200, 50)):
+            for i, it in enumerate(range(0, 200, 200)):
                 minipic_ci.evaluate(
                     new_data[i],
                     reference_sum_data[ispecies][i],

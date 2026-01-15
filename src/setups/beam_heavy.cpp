@@ -40,7 +40,7 @@ void setup(Params &params) {
   // Time
   params.dt = 0.9;
 
-  params.simulation_time = 200 * params.dt;
+  params.simulation_time = 201 * params.dt;
 
   // Species
 
