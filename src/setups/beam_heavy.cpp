@@ -40,7 +40,7 @@ void setup(Params &params) {
   // Time
   params.dt = 0.9;
 
-  params.simulation_time = 200 * params.dt;
+  params.simulation_time = 201 * params.dt;
 
   // Species
 
@@ -76,10 +76,10 @@ void setup(Params &params) {
   params.seed = 0;
 
   // Scalar Diagnostics
-  params.scalar_diagnostics_period = 10;
+  params.scalar_diagnostics_period = 200;
 
   // Field Diagnostics
-  params.field_diagnostics_period = 50;
+  params.field_diagnostics_period = 200;
 
   // Particle binning
   params.add_particle_binning("diag_w_gamma",
@@ -89,7 +89,7 @@ void setup(Params &params) {
                               {0},
                               {0},
                               {0, 1},
-                              50,
+                              200,
                               "binary");
 
   params.add_particle_binning("diag_x_y_z_d",
@@ -101,7 +101,7 @@ void setup(Params &params) {
                               {0., 0., 0.},
                               {params.sup_x, params.sup_y, params.sup_z},
                               {0, 1},
-                              50,
+                              200,
                               "vtk");
 
   // Timers

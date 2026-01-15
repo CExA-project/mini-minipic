@@ -84,10 +84,10 @@ void setup(Params &params) {
   params.seed = 0;
 
   // Scalar Diagnostics
-  params.scalar_diagnostics_period = 10;
+  params.scalar_diagnostics_period = 200;
 
   // Field Diagnostics
-  params.field_diagnostics_period = 100;
+  params.field_diagnostics_period = 200;
   params.field_diagnostics_format = "bin";
 
   // Timers
