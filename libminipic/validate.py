@@ -29,7 +29,7 @@ def detect_setup(path: Path) -> str:
     return matcher[0].strip()
 
 
-def validate_setup(path, setup=None, threshold=THRESHOLD):
+def validate_setup(path, setup=None, evaluate=True, threshold=THRESHOLD):
     if not setup:
         setup = detect_setup(path)
         print(f"Autodetected setup: {setup}")
@@ -41,7 +41,7 @@ def validate_setup(path, setup=None, threshold=THRESHOLD):
     if not os.path.isdir("diags"):
         raise MissingFileMiniPICError(f"Directory diags is not in {path}")
 
-    module.validate(threshold)
+    module.validate(evaluate=evaluate, threshold=threshold)
 
     print_success(f"Setup {setup} tested with success")
 
@@ -60,6 +60,11 @@ def validate():
         default=Path.cwd(),
     )
     parser.add_argument(
+        "--no-evaluate",
+        help=f"do not perform the validation",
+        action="store_true"
+    )
+    parser.add_argument(
         "--threshold",
         help=f"threshold for the validation (default to {THRESHOLD})",
         default=THRESHOLD,
@@ -68,4 +73,4 @@ def validate():
 
     args = parser.parse_args()
 
-    validate_setup(args.path, args.setup, args.threshold)
+    validate_setup(args.path, args.setup, not args.no_evaluate, args.threshold)
