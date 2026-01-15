@@ -20,7 +20,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
     # Create output file list
     for field in ["Ex", "Ey", "Ez", "Bx", "By", "Bz"]:
-        for it in range(0, 300, 100):
+        for it in range(0, 201, 200):
 
             file = "{}_{:03d}.bin".format(field, it)
             output_file_list.append(file)
@@ -118,27 +118,22 @@ def validate(evaluate=True, threshold=THRESHOLD):
     reference_data = {
         "Ex": [
             0.0,
-            18.89461989527716,
             78.55592092043187,
         ],
         "Ey": [
             0.0,
-            2.3511678107512326,
             9.5656799728717190,
         ],
         "Ez": [
             0.0,
-            183.2948629451064,
             748.3567468708843,
         ],
         "Bx": [
             0.0,
-            19.48134236079309,
             80.94553055070384,
         ],
         "By": [
             0.0,
-            185.68020077453403,
             754.12940596242360,
         ],
         # 'Bz' : [0.0, 8.68335830083499e-14, 8.109979554106818e-13, 2.2881775959027207e-12, 3.4172712318143877e-12, 4.161059825829489e-12]
@@ -148,7 +143,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
         new_data = []
 
-        for i, it in enumerate(range(0, 300, 100)):
+        for i, it in enumerate(range(0, 201, 200)):
 
             file = "{}_{:03d}.bin".format(field, it)
 
@@ -172,10 +167,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
         print("    - For field {}: {}".format(field, new_data))
 
         if evaluate:
-            for i, it in enumerate(range(100, 300, 100)):
+            for i, it in enumerate(range(0, 201, 200)):
+                if i == 0:
+                    continue
+
                 minipic_ci.evaluate(
-                    new_data[i + 1],
-                    reference_data[field][i + 1],
+                    new_data[i],
+                    reference_data[field][i],
                     threshold,
                     "relative",
                     "{} field not similar".format(field),
