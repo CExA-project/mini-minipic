@@ -168,7 +168,12 @@ def run():
         type=int,
         default=4,
     )
-    parser.add_argument("-a", "--arguments", help="arguments passed to mini-minipic", default=None)
+    parser.add_argument(
+        "-a",
+        "--arguments",
+        help="arguments passed to mini-minipic (you should use = between the option and the value)",
+        default=None,
+    )
     parser.add_argument(
         "--fresh",
         help="whether to delete or not already existing files",
@@ -211,10 +216,12 @@ def run():
         help="add custom environment variables for the execution, for instance `OMP_PROC_BIND=spread`",
     )
     parser.add_argument(
-        "--cmake-args", help="set custom cmake arguments for the compilation"
+        "--cmake-args",
+        help="set custom cmake arguments for the compilation (you should use = between the option and the value)",
     )
     parser.add_argument(
-        "--cmake-args-add", help="add custom cmake arguments for the compilation"
+        "--cmake-args-add",
+        help="add custom cmake arguments for the compilation (you should use = between the option and the value)",
     )
 
     args = parser.parse_args()
@@ -440,8 +447,12 @@ def run():
 
             run_command = [
                 "./{}".format(executable_name),
-                *(args.split(" ")),
             ]  # srun numactl --interleave=all
+
+            args_clean = args.strip()
+            if args_clean:
+                run_command = [*run_command, *(args_clean.split(" "))]
+
             if prefix:
                 run_command = [*prefix, *run_command]
 
