@@ -168,7 +168,7 @@ def run():
         type=int,
         default=4,
     )
-    parser.add_argument("-a", "--arguments", help="default arguments", default=None)
+    parser.add_argument("-a", "--arguments", help="arguments passed to mini-minipic", default=None)
     parser.add_argument(
         "--fresh",
         help="whether to delete or not already existing files",
@@ -440,7 +440,7 @@ def run():
 
             run_command = [
                 "./{}".format(executable_name),
-                *args,
+                *(args.split(" ")),
             ]  # srun numactl --interleave=all
             if prefix:
                 run_command = [*prefix, *run_command]
