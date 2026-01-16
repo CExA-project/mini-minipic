@@ -1,0 +1,46 @@
+#!/bin/bash
+#SBATCH --job-name=mini-minipic
+#SBATCH --output=%x.%J.out
+#SBATCH --error=%x.%J.err
+#SBATCH --nodes=1
+#SBATCH --time=00:30:00
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH -p gpua100
+#SBATCH --gres=gpu:1
+
+set -e
+
+# Modules
+
+module purge
+module load "gcc/13.2.0/gcc-4.8.5"
+module load "cuda/12.8.0/gcc-13.2.0"
+module load "cmake/3.28.3/gcc-11.2.0"
+module load "python-nospack/3.12.4/gcc-11.2.0"
+
+# Python env
+
+if [[ -d ./venv ]]
+then
+    source ./venv/bin/activate
+fi
+
+workdir=/scratch/$USER-$SLURM_JOB_ID
+export Kokkos_ROOT=...
+
+# Launch the test
+
+echo "--- Evaluation of build, run and validation ---"
+
+mini-run \
+    -g gpu-a100 \
+    -j 8 \
+    --build-dir "$workdir" \
+    -s thermal_evaluation,beam_evaluation,antenna_evaluation
+
+echo "--- Evaluation of performance ---"
+
+python scripts/evaluate.py -n 5 "$workdir/beam_evaluation"
+python scripts/evaluate.py -n 5 "$workdir/antenna_evaluation"
+python scripts/evaluate.py -n 5 "$workdir/thermal_evaluation"
