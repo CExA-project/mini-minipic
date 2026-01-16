@@ -26,3 +26,7 @@ lib/
 man/
 pyvenv.cfg
 venv/
+
+# Slurm job files
+*.err
+*.out

@@ -8,6 +8,7 @@
 #SBATCH --cpus-per-task=8
 #SBATCH -p gpua100
 #SBATCH --gres=gpu:1
+#SBATCH --mem 20G
 
 set -e
 
