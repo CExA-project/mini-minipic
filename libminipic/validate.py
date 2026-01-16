@@ -60,9 +60,7 @@ def validate():
         default=Path.cwd(),
     )
     parser.add_argument(
-        "--no-evaluate",
-        help=f"do not perform the validation",
-        action="store_true"
+        "--no-evaluate", help=f"do not perform the validation", action="store_true"
     )
     parser.add_argument(
         "--threshold",
