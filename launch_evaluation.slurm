@@ -27,7 +27,6 @@ then
     source ./venv/bin/activate
 fi
 
-workdir=/scratch/$USER-$SLURM_JOB_ID
 export Kokkos_ROOT=...
 
 # Launch the test
@@ -37,11 +36,10 @@ echo "--- Evaluation of build, run and validation ---"
 mini-run \
     -g gpu-a100 \
     -j 8 \
-    --build-dir "$workdir" \
     -s thermal_evaluation,beam_evaluation,antenna_evaluation
 
 echo "--- Evaluation of performance ---"
 
-python scripts/evaluate.py -n 5 "$workdir/beam_evaluation"
-python scripts/evaluate.py -n 5 "$workdir/antenna_evaluation"
-python scripts/evaluate.py -n 5 "$workdir/thermal_evaluation"
+python scripts/evaluate.py -n 5 "build/beam_evaluation"
+python scripts/evaluate.py -n 5 "build/antenna_evaluation"
+python scripts/evaluate.py -n 5 "build/thermal_evaluation"
