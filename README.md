@@ -71,3 +71,5 @@ If you want to skip the porting part, you can directly start from the `src/kokko
 ## Publications
 
 - SILVA-CUEVAS, J. J., ZYCH, M., PEYEN, K., et al. Towards a complete task-based implementation of a 3D Particle-In-Cell code: performance studies and benchmarks. Computer Physics Communications, 2025, p. 109647. https://doi.org/10.1016/j.cpc.2025.109647
+
+- KHOURY, E. E., LOBET, M., COLOMBET, L., BIGOT, J., PEYEN, K., SILVA-CUEVAS, J. J. Exploring C++ standard parallelism for GPU programming in a particle-in-cell application (preprint). 2025. HAL: [hal-05316488](https://hal.science/hal-05316488) — PDF: [HeteroPar_EuroPar.pdf](https://hal.science/hal-05316488v1/file/HeteroPar_EuroPar.pdf)
