@@ -50,6 +50,24 @@ Note you have to source the activation script if you are in a new terminal (and 
 
 </details>
 
+<details>
+
+<summary>
+And also with conda:
+</summary>
+
+```sh
+conda create -n minipic python=<x.y> pip -c conda-forge
+conda activate minipic
+```
+
+with `<x.y>` the version of Python.
+By instance, `python3.12`.
+Note you have to source the activation script if you are in a new terminal (and in a Slurm job).
+
+</details>
+
+
 ## `mini-run` command
 
 The `mini-run` command is used to build (mini)miniPIC for a selection of setups, to execute it and to validate its results.

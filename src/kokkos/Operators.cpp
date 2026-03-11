@@ -87,9 +87,9 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
   const auto inv_dy_m = em.inv_dy_m;
   const auto inv_dz_m = em.inv_dz_m;
 
-  const auto xmin = 0;
-  const auto ymin = 0;
-  const auto zmin = 0;
+  const auto xmin = em.min_x_;
+  const auto ymin = em.min_y_;
+  const auto zmin = em.min_z_;
 
   for (std::size_t is = 0; is < particles.size(); is++) {
 
