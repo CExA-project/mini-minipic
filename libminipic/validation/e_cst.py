@@ -12,6 +12,9 @@ from libminipic.validate import THRESHOLD
 
 def validate(evaluate=True, threshold=THRESHOLD):
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     number_of_iterations = 50000
 
     # ______________________________________________________________________
@@ -37,9 +40,24 @@ def validate(evaluate=True, threshold=THRESHOLD):
             raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
+    # Reference database
+
+    references = {
+        "species_final": [50000, 1.0, 0.07602920573221358],
+        "cloud": [
+            24.411730435676887,
+            23.88234608876007,
+            23.05876871008283,
+            994.5565640860931,
+            198.9113128173085,
+            1591.290502538468,
+        ],
+    }
+
+    # ______________________________________________________________________
     # Check final scalar for species
 
-    reference_data = [50000, 1.0, 0.07602920573221358]
+    reference_data = references["species_final"]
 
     with open("diags/species_00.txt", "r") as f:
         lines = f.readlines()
@@ -75,17 +93,12 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
     else:
 
-        print("reference_data = [{}, {}, {}]".format(iteration, particles, energy))
+        references["species_final"] = [iteration, particles, energy]
 
     # ______________________________________________________________________
     # Check cloud files
 
-    x_sum_ref = 24.411730435676887
-    y_sum_ref = 23.88234608876007
-    z_sum_ref = 23.05876871008283
-    px_sum_ref = 994.5565640860931
-    py_sum_ref = 198.9113128173085
-    pz_sum_ref = 1591.290502538468
+    reference_cloud = references["cloud"]
 
     nb_files = int(number_of_iterations / 1000)
 
@@ -124,31 +137,41 @@ def validate(evaluate=True, threshold=THRESHOLD):
     if evaluate:
 
         minipic_ci.evaluate(
-            x_sum, x_sum_ref, threshold, "relative", "Sum over x positions not similar"
+            x_sum, reference_cloud[0], threshold, "relative", "Sum over x positions not similar"
         )
         minipic_ci.evaluate(
-            y_sum, y_sum_ref, threshold, "relative", "Sum over y positions not similar"
+            y_sum, reference_cloud[1], threshold, "relative", "Sum over y positions not similar"
         )
         minipic_ci.evaluate(
-            z_sum, z_sum_ref, threshold, "relative", "Sum over z positions not similar"
+            z_sum, reference_cloud[2], threshold, "relative", "Sum over z positions not similar"
         )
 
         minipic_ci.evaluate(
-            px_sum, px_sum_ref, threshold, "relative", "Sum over px not similar"
+            px_sum, reference_cloud[3], threshold, "relative", "Sum over px not similar"
         )
         minipic_ci.evaluate(
-            py_sum, py_sum_ref, threshold, "relative", "Sum over py not similar"
+            py_sum, reference_cloud[4], threshold, "relative", "Sum over py not similar"
         )
         minipic_ci.evaluate(
-            pz_sum, pz_sum_ref, threshold, "relative", "Sum over pz not similar"
+            pz_sum, reference_cloud[5], threshold, "relative", "Sum over pz not similar"
         )
 
     else:
 
-        print("x_sum_ref = {}".format(x_sum))
-        print("y_sum_ref = {}".format(y_sum))
-        print("z_sum_ref = {}".format(z_sum))
+        references["cloud"] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
 
-        print("px_sum_ref = {}".format(px_sum))
-        print("py_sum_ref = {}".format(py_sum))
-        print("pz_sum_ref = {}".format(pz_sum))
+    # ______________________________________________________________________
+    # Write updated references to JSON file if not evaluating
+
+    if not evaluate:
+        import json
+
+        json_file_name = validation_label
+
+        with open(json_file_name, "w") as f:
+            json.dump(references, f, indent=4)
+        print(f" > New references written to {json_file_name}")
+
+        print(
+            " > New references: \n {}".format(json.dumps(references, indent=4))
+        )

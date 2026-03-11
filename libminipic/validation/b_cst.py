@@ -14,6 +14,9 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
     number_of_iterations = 50000
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     # ______________________________________________________________________
     # Check output files are created
 

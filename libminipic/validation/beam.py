@@ -12,6 +12,9 @@ from libminipic.validate import THRESHOLD
 
 def validate(evaluate=True, threshold=THRESHOLD):
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     # ______________________________________________________________________
     # Reference data
 

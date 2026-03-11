@@ -12,6 +12,9 @@ from libminipic.validate import THRESHOLD
 
 def validate(evaluate=True, threshold=THRESHOLD):
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     # ______________________________________________________________________
     # Check output files are created
 
@@ -34,21 +37,50 @@ def validate(evaluate=True, threshold=THRESHOLD):
             raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
+    # Reference database
+
+    references = {
+        "fields_final": [
+            200,
+            1.178332626270596e-08,
+            1.121385881385788e-10,
+            1.372260141937414e-06,
+            1.217329509377536e-08,
+            1.397861526161067e-06,
+            5.139203602251246e-39,
+        ],
+        "fields_3d": {
+            "Ex": [
+                0.0,
+                78.55592092043187,
+            ],
+            "Ey": [
+                0.0,
+                9.5656799728717190,
+            ],
+            "Ez": [
+                0.0,
+                748.3567468708843,
+            ],
+            "Bx": [
+                0.0,
+                80.94553055070384,
+            ],
+            "By": [
+                0.0,
+                754.12940596242360,
+            ],
+        },
+    }
+
+    # ______________________________________________________________________
     # Check scalars
 
     print(" > Check scalars")
 
     # Check final scalar values for fields
 
-    reference_data = [
-        200,
-        1.178332626270596e-08,
-        1.121385881385788e-10,
-        1.372260141937414e-06,
-        1.217329509377536e-08,
-        1.397861526161067e-06,
-        5.139203602251246e-39,
-    ]
+    reference_data = references["fields_final"]
 
     with open("diags/fields.txt", "r") as f:
         lines = f.readlines()
@@ -109,35 +141,15 @@ def validate(evaluate=True, threshold=THRESHOLD):
             "By value in fields.txt is not correct",
         )
         # minipic_ci.evaluate(Bz, reference_data[6], 1e-2, 'relative', 'Bz value in fields.txt is not correct') ===> too small to be relevant
+    else:
+        references["fields_final"] = [iteration, Ex, Ey, Ez, Bx, By, Bz]
 
     # ______________________________________________________________________
     # Check field
 
     print(" > Check fields")
 
-    reference_data = {
-        "Ex": [
-            0.0,
-            78.55592092043187,
-        ],
-        "Ey": [
-            0.0,
-            9.5656799728717190,
-        ],
-        "Ez": [
-            0.0,
-            748.3567468708843,
-        ],
-        "Bx": [
-            0.0,
-            80.94553055070384,
-        ],
-        "By": [
-            0.0,
-            754.12940596242360,
-        ],
-        # 'Bz' : [0.0, 8.68335830083499e-14, 8.109979554106818e-13, 2.2881775959027207e-12, 3.4172712318143877e-12, 4.161059825829489e-12]
-    }
+    reference_data = references["fields_3d"]
 
     for field in reference_data.keys():
 
@@ -178,3 +190,22 @@ def validate(evaluate=True, threshold=THRESHOLD):
                     "relative",
                     "{} field not similar".format(field),
                 )
+        else:
+            references["fields_3d"][field] = new_data
+
+    # ______________________________________________________________________
+    # Write updated references to JSON file if not evaluating
+
+    if not evaluate:
+        import json
+
+        json_file_name = validation_label
+
+        with open(json_file_name, "w") as f:
+            json.dump(references, f, indent=4)
+        print(f" > New references written to {json_file_name}")
+
+        print(
+            " > New references: \n {}".format(json.dumps(references, indent=4))
+        )
+
