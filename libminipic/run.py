@@ -481,7 +481,7 @@ def run():
                 ]
             )
 
-            validate_setup(bench_dir, setup, threshold)
+            validate_setup(bench_dir, setup, evaluate, threshold)
 
             # ____________________________________________________________________________
             # Read timers (json format)
