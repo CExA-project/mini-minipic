@@ -476,12 +476,13 @@ def run():
                     bench_dir,
                     "--setup",
                     setup,
+                    "--no-evaluate" if not evaluate else "",
                     "--threshold",
                     threshold,
                 ]
             )
 
-            validate_setup(bench_dir, setup, evaluate, threshold)
+            validate_setup(bench_dir, setup=setup, evaluate=evaluate, threshold=threshold)
 
             # ____________________________________________________________________________
             # Read timers (json format)

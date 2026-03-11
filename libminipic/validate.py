@@ -41,6 +41,8 @@ def validate_setup(path, setup=None, evaluate=True, threshold=THRESHOLD):
     if not os.path.isdir("diags"):
         raise MissingFileMiniPICError(f"Directory diags is not in {path}")
 
+    print(evaluate, threshold)
+
     module.validate(evaluate=evaluate, threshold=threshold)
 
     print_success(f"Setup {setup} tested with success")
