@@ -40,9 +40,24 @@ def validate(evaluate=True, threshold=THRESHOLD):
             raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
+    # Reference database
+
+    references = {
+        "species_final": [50000, 1.0, 0.003123105625616999],
+        "cloud": [
+            27.258704826095418,
+            25.45718322703324,
+            25.499999999999996,
+            126.92720347227889,
+            127.28848117864518,
+            0.0,
+        ],
+    }
+
+    # ______________________________________________________________________
     # Check final scalar for species
 
-    reference_data = [50000, 1.0, 0.003123105625616999]
+    reference_data = references["species_final"]
 
     with open("diags/species_00.txt", "r") as f:
         lines = f.readlines()
@@ -78,17 +93,12 @@ def validate(evaluate=True, threshold=THRESHOLD):
 
     else:
 
-        print("reference_data = [{}, {}, {}]".format(iteration, particles, energy))
+        references["species_final"] = [iteration, particles, energy]
 
     # ______________________________________________________________________
     # Check cloud files
 
-    x_sum_ref = 27.258704826095418
-    y_sum_ref = 25.45718322703324
-    z_sum_ref = 25.499999999999996
-    px_sum_ref = 126.92720347227889
-    py_sum_ref = 127.28848117864518
-    pz_sum_ref = 0.0
+    reference_cloud = references["cloud"]
 
     nb_files = int(number_of_iterations / 1000)
 
@@ -127,31 +137,41 @@ def validate(evaluate=True, threshold=THRESHOLD):
     if evaluate:
 
         minipic_ci.evaluate(
-            x_sum, x_sum_ref, threshold, "relative", "Sum over x positions not similar"
+            x_sum, reference_cloud[0], threshold, "relative", "Sum over x positions not similar"
         )
         minipic_ci.evaluate(
-            y_sum, y_sum_ref, threshold, "relative", "Sum over y positions not similar"
+            y_sum, reference_cloud[1], threshold, "relative", "Sum over y positions not similar"
         )
         minipic_ci.evaluate(
-            z_sum, z_sum_ref, threshold, "relative", "Sum over z positions not similar"
+            z_sum, reference_cloud[2], threshold, "relative", "Sum over z positions not similar"
         )
 
         minipic_ci.evaluate(
-            px_sum, px_sum_ref, threshold, "relative", "Sum over px not similar"
+            px_sum, reference_cloud[3], threshold, "relative", "Sum over px not similar"
         )
         minipic_ci.evaluate(
-            py_sum, py_sum_ref, threshold, "relative", "Sum over py not similar"
+            py_sum, reference_cloud[4], threshold, "relative", "Sum over py not similar"
         )
         minipic_ci.evaluate(
-            pz_sum, pz_sum_ref, threshold, "absolute", "Sum over pz not similar"
+            pz_sum, reference_cloud[5], threshold, "absolute", "Sum over pz not similar"
         )
 
     else:
 
-        print("x_sum_ref = {}".format(x_sum))
-        print("y_sum_ref = {}".format(y_sum))
-        print("z_sum_ref = {}".format(z_sum))
+        references["cloud"] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
 
-        print("px_sum_ref = {}".format(px_sum))
-        print("py_sum_ref = {}".format(py_sum))
-        print("pz_sum_ref = {}".format(pz_sum))
+    # ______________________________________________________________________
+    # Write updated references to JSON file if not evaluating
+
+    if not evaluate:
+        import json
+
+        json_file_name = validation_label
+
+        with open(json_file_name, "w") as f:
+            json.dump(references, f, indent=4)
+        print(f" > New references written to {json_file_name}")
+
+        print(
+            " > New references: \n {}".format(json.dumps(references, indent=4))
+        )

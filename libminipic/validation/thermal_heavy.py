@@ -332,7 +332,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 minipic_diag.read_1d_diag("diags/" + file)
             )
 
-            new_data.append(np.sum(np.abs(data * x_data)))
+            new_data.append(float(np.sum(np.abs(data * x_data))))
 
         print("    - For species {}: {}".format(ispecies, new_data))
 
