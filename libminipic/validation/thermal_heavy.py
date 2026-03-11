@@ -12,6 +12,9 @@ from libminipic.validate import THRESHOLD
 
 def validate(evaluate=True, threshold=THRESHOLD):
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     # ______________________________________________________________________
     # Check output files are created
 
@@ -52,16 +55,96 @@ def validate(evaluate=True, threshold=THRESHOLD):
             raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
+    # Reference database
+
+    references =  {
+        "species_initial_scalars": [
+            [
+                0,
+                14155776.0,
+                1.499884908404337e-07
+            ],
+            [
+                0,
+                14155776.0,
+                1.500028565897728e-07
+            ]
+        ],
+        "species_final_scalars": [
+            [
+                200,
+                14155776.0,
+                1.499884907814349e-07
+            ],
+            [
+                200,
+                14155776.0,
+                1.50002856588209e-07
+            ]
+        ],
+        "fields_final": [
+            200,
+            2.373956450314232e-17,
+            2.401477383433454e-17,
+            2.279647260485128e-17,
+            2.868246065305342e-18,
+            2.445340639904533e-18,
+            4.07796581368127e-18
+        ],
+        "gamma_spectrum_sum": [
+            [
+                1.0150531572334735e-05
+            ],
+            [
+                1.0001577013349268e-05
+            ]
+        ],
+        "cloud_initial": [
+            [
+                7077889.707407768,
+                7077888.009019216,
+                7077886.385895036,
+                1135055.8230955107,
+                1135055.584002778,
+                1135050.7436878507
+            ],
+            [
+                7077889.707407768,
+                7077888.009019216,
+                7077886.385895036,
+                26358.735090712158,
+                26359.07972500561,
+                26359.00342069896
+            ]
+        ],
+        "cloud_final": [
+            [
+                7077799.296687735,
+                7078373.593529964,
+                7078337.84302292,
+                1135055.8229151054,
+                1135055.5837926304,
+                1135050.7435688768
+            ],
+            [
+                7075627.918776955,
+                7077880.4750964185,
+                7077944.363062884,
+                26358.735090630078,
+                26359.07972484865,
+                26359.003420551046
+            ]
+        ]
+    }
+
+    # ______________________________________________________________________
     # Check scalars
 
     print(" > Checking scalars")
 
     # Check initial scalar for species
 
-    reference_data = [
-        [0, 14155776.0, 1.499884908404337e-07],
-        [0, 14155776.0, 1.500028565897728e-07],
-    ]
+    reference_data = references["species_initial_scalars"]
 
     for ispecies in range(2):
 
@@ -107,13 +190,12 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Kinetic energy in species_{:02d}.txt is not correct".format(ispecies),
             )
+        else:
+            references["species_initial_scalars"][ispecies] = [iteration, particles, energy]
 
     # Check final scalar for species
 
-    reference_data = [
-        [200, 14155776.0, 1.499889265219962e-07],
-        [200, 14155776.0, 1.500028967042561e-07],
-    ]
+    reference_data = references["species_final_scalars"]
 
     for ispecies in range(2):
 
@@ -159,18 +241,12 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Kinetic energy in species_{:02d}.txt is not correct".format(ispecies),
             )
+        else:
+            references["species_final_scalars"][ispecies] = [iteration, particles, energy]
 
     # Check final scalar values for fields
 
-    reference_data = [
-        200,
-        2.374079667108436e-17,
-        2.399868692610261e-17,
-        2.2805506135386e-17,
-        2.836007480112799e-18,
-        2.481902254213358e-18,
-        4.078850120671712e-18,
-    ]
+    reference_data = references["fields_final"]
 
     with open("diags/fields.txt", "r") as f:
         lines = f.readlines()
@@ -244,24 +320,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
             "relative",
             "Bz value at it {} in fields.txt is not correct".format(iteration),
         )
+    else:
+        references["fields_final"] = [iteration, Ex, Ey, Ez, Bx, By, Bz]
 
     # ______________________________________________________________________
     # Check gamma spectrums
 
-    reference_sum_data = [
-        [
-            1.0150531572334735e-05,
-            1.0150532017329975e-05,
-            1.0150532229417286e-05,
-            1.0150531280595797e-05,
-        ],
-        [
-            1.0001577013349268e-05,
-            1.000157701277701e-05,
-            1.0001577012772279e-05,
-            1.0001577012774996e-05,
-        ],
-    ]
+    reference_sum_data = references["gamma_spectrum_sum"]
 
     print(" > Checking gamma spectrums")
 
@@ -277,7 +342,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 minipic_diag.read_1d_diag("diags/" + file)
             )
 
-            new_data.append(np.sum(np.abs(data * x_data)))
+            new_data.append(float(np.sum(np.abs(data * x_data))))
 
         print("    - For species {}: {}".format(ispecies, new_data))
 
@@ -292,28 +357,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
                         ispecies, it
                     ),
                 )
+        else:
+            references["gamma_spectrum_sum"][ispecies] = new_data
 
     # ______________________________________________________________________
     # Check initial cloud file (particle initialization)
 
-    reference_data = [
-        [
-            7077889.707407768,
-            7077888.009019216,
-            7077886.385895036,
-            1135055.8230955107,
-            1135055.584002778,
-            1135050.7436878507,
-        ],
-        [
-            7077889.707407768,
-            7077888.009019216,
-            7077886.385895036,
-            26358.735090712158,
-            26359.07972500561,
-            26359.00342069896,
-        ],
-    ]
+    reference_data = references["cloud_initial"]
 
     print(" > Checking initial cloud file")
 
@@ -383,28 +433,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Sum over pz not similar",
             )
+        else:
+            references["cloud_initial"][ispecies] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
 
     # ______________________________________________________________________
     # Check final cloud file (particle initialization)
 
-    reference_data = [
-        [
-            7077766.27892306,
-            7078358.6668538395,
-            7078311.595204575,
-            1135063.4887995576,
-            1135053.8893229237,
-            1135053.9238455906,
-        ],
-        [
-            7075627.865708505,
-            7077879.451784642,
-            7077943.3402037965,
-            26358.7716278689,
-            26359.08450929296,
-            26358.970218752125,
-        ],
-    ]
+    reference_data = references["cloud_final"]
 
     print(" > Checking final cloud file")
 
@@ -474,3 +509,20 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Sum over pz not similar",
             )
+        else:
+            references["cloud_final"][ispecies] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
+
+    # ______________________________________________________________________
+    # Write updated references to JSON file if not evaluating
+
+    if not evaluate:
+        import json
+
+        json_file_name = validation_label
+
+        with open(json_file_name, "w") as f:
+            json.dump(references, f, indent=4)
+        print(f" > New references written to {json_file_name}")
+
+        print(f" > New references: \n {json.dumps(references, indent=4)}")
+

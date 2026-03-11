@@ -87,6 +87,10 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
   const auto inv_dy_m = em.inv_dy_m;
   const auto inv_dz_m = em.inv_dz_m;
 
+  const auto xmin = em.min_x_;
+  const auto ymin = em.min_y_;
+  const auto zmin = em.min_z_;
+
   for (std::size_t is = 0; is < particles.size(); is++) {
 
     const std::size_t n_particles = particles[is].size();
@@ -116,26 +120,35 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
         KOKKOS_LAMBDA(const int part) {
           //  [=, &Ex](const int part) {
 
-          // // Calculate normalized positions
-          const double ixn = x(part) * inv_dx_m;
-          const double iyn = y(part) * inv_dy_m;
-          const double izn = z(part) * inv_dz_m;
+        // Calculate normalized positions
+        const double ixn = (x(part) - xmin) * inv_dx_m;
+        const double iyn = (y(part) - ymin) * inv_dy_m;
+        const double izn = (z(part) - zmin) * inv_dz_m;
 
-          // // Compute indexes in global primal grid
-          const unsigned int ixp = Kokkos::floor(ixn);
-          const unsigned int iyp = Kokkos::floor(iyn);
-          const unsigned int izp = Kokkos::floor(izn);
+        // Compute indexes in global primal grid
+        const unsigned int ixp = Kokkos::floor(ixn);
+        const unsigned int iyp = Kokkos::floor(iyn);
+        const unsigned int izp = Kokkos::floor(izn);
 
-          // Compute indexes in global dual grid
-          const unsigned int ixd = Kokkos::floor(ixn + 0.5);
-          const unsigned int iyd = Kokkos::floor(iyn + 0.5);
-          const unsigned int izd = Kokkos::floor(izn + 0.5);
+        // Compute indexes in global dual grid
+        const unsigned int ixd = Kokkos::floor(ixn + 0.5);
+        const unsigned int iyd = Kokkos::floor(iyn + 0.5);
+        const unsigned int izd = Kokkos::floor(izn + 0.5);
+
+        // Compute distances for interpolation
+        const double dist_x_p = ixn - ixp;
+        const double dist_y_p = iyn - iyp;
+        const double dist_z_p = izn - izp;
+
+        const double dist_x_d = (ixn + 0.5) - ixd;
+        const double dist_y_d = (iyn + 0.5) - iyd;
+        const double dist_z_d = (izn + 0.5) - izd;
 
           // Compute interpolation coeff, p = primal, d = dual
 
           // Ex (d, p, p)
           {
-            const double coeffs[3] = {ixn + 0.5, iyn, izn};
+            const double coeffs[3] = {dist_x_d, dist_y_p, dist_z_p};
 
             const double v00 = Ex(ixd, iyp, izp) * (1 - coeffs[0]) +
                                Ex(ixd + 1, iyp, izp) * coeffs[0];
@@ -153,7 +166,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
           // Ey (p, d, p)
           {
-            const double coeffs[3] = {ixn, iyn + 0.5, izn};
+            const double coeffs[3] = {dist_x_p, dist_y_d, dist_z_p};
 
             const double v00 = Ey(ixp, iyd, izp) * (1 - coeffs[0]) +
                                Ey(ixp + 1, iyd, izp) * coeffs[0];
@@ -171,7 +184,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
           // Ez (p, p, d)
           {
-            const double coeffs[3] = {ixn, iyn, izn + 0.5};
+            const double coeffs[3] = {dist_x_p, dist_y_p, dist_z_d};
 
             const double v00 = Ez(ixp, iyp, izd) * (1 - coeffs[0]) +
                                Ez(ixp + 1, iyp, izd) * coeffs[0];
@@ -190,7 +203,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
           // interpolation magnetic field
           // Bx (p, d, d)
           {
-            const double coeffs[3] = {ixn, iyn + 0.5, izn + 0.5};
+            const double coeffs[3] = {dist_x_p, dist_y_d, dist_z_d};
 
             const double v00 = Bx(ixp, iyd, izd) * (1 - coeffs[0]) +
                                Bx(ixp + 1, iyd, izd) * coeffs[0];
@@ -208,7 +221,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
           // By (d, p, d)
           {
-            const double coeffs[3] = {ixn + 0.5, iyn, izn + 0.5};
+            const double coeffs[3] = {dist_x_d, dist_y_p, dist_z_d};
 
             const double v00 = By(ixd, iyp, izd) * (1 - coeffs[0]) +
                                By(ixd + 1, iyp, izd) * coeffs[0];
@@ -226,7 +239,7 @@ void interpolate(ElectroMagn &em, std::vector<Particles> &particles) {
 
           // Bz (d, d, p)
           {
-            const double coeffs[3] = {ixn + 0.5, iyn + 0.5, izn};
+            const double coeffs[3] = {dist_x_d, dist_y_d, dist_z_p};
 
             const double v00 = Bz(ixd, iyd, izp) * (1 - coeffs[0]) +
                                Bz(ixd + 1, iyd, izp) * coeffs[0];

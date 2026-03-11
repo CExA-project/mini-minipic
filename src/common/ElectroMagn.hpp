@@ -29,6 +29,9 @@ public:
   double dx_m, dy_m, dz_m, cell_volume_m;
   //! Invert certain value to avoid div
   double inv_dx_m, inv_dy_m, inv_dz_m, inv_cell_volume_m;
+  //! min position of the grids (position of the node (0,0,0) of the primal grid)
+  //! Position in the primal grid is the same reference as for particles
+  double min_x_, min_y_, min_z_;
 
   /*
     FIELDS on Yee lattice | Staggered grid
@@ -92,6 +95,10 @@ public:
     inv_dy_m          = params.inv_dy;
     inv_dz_m          = params.inv_dz;
     inv_cell_volume_m = params.inv_cell_volume;
+
+    min_x_ = params.inf_x;
+    min_y_ = params.inf_y;
+    min_z_ = params.inf_z;
 
     DEBUG("Start Allocate current arrays");
     Jx_m = view_t("Jx", nx_d_m, ny_p_m + 2, nz_p_m + 2);

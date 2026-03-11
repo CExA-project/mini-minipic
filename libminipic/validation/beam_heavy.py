@@ -12,36 +12,13 @@ from libminipic.validate import THRESHOLD
 
 def validate(evaluate=True, threshold=THRESHOLD):
 
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
+
     # ______________________________________________________________________
     # Reference data
 
-    reference_dict = {
-        "scalar": {
-            "fields": [
-                200,
-                2.193680012023896e-07,
-                9.573440585051737e-08,
-                9.431371956203926e-08,
-                1.974225463734849e-09,
-                1.380975730794138e-07,
-                1.385266311893069e-07,
-            ],
-            "species": [
-                [
-                    [0, 4391975.0, 0.0009504836065559616],
-                    [0, 4391975.0, 1.743805526446577],
-                ],
-                [
-                    [200, 4391975.0, 0.003145507961721467],
-                    [200, 4391975.0, 1.743594658347867],
-                ],
-            ],
-        },
-        "gamma_spectrum": [
-            [0.00168433523734636, 0.003879805562912453],
-            [0.001683572470070812, 0.0016834489820420893],
-        ],
-    }
+    reference_dict = {'scalar': {'fields': [200, 1.937263623185142e-11, 1.303879394850996e-11, 1.609874026005127e-11, 5.319614536950674e-15, 2.64877909841466e-11, 2.249203907175156e-11], 'species': [[[0, 4391975.0, 0.0009504836065559616], [0, 4391975.0, 1.743805526446576]], [[200, 4391975.0, 0.0009504837802821955], [200, 4391975.0, 1.743805526207549]]]}, 'gamma_spectrum': [[0.00168433523734636, 0.0016843353950389095], [0.001683572470070812, 0.0016835724700901024]]}
 
     # ______________________________________________________________________
     # Check output files are created
@@ -293,7 +270,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 minipic_diag.read_1d_diag("diags/" + file)
             )
 
-            new_data.append(np.sum(data * x_data))
+            new_data.append(float(np.sum(data * x_data)))
 
         print("    - For species {}: {}".format(ispecies, new_data))
 
