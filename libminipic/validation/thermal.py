@@ -538,3 +538,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
             json.dump(references, f, indent=4)
         print(f" > New references written to {json_file_name}")
 
+        print(
+            " > New references: \n {}".format(json.dumps(references, indent=4))
+        )
+
