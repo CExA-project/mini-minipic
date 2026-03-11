@@ -11,6 +11,12 @@ from libminipic.validate import THRESHOLD
 
 
 def validate(evaluate=True, threshold=THRESHOLD):
+    """
+    Validate the `thermal` setup.
+    """
+
+    # Get the name of the current file (without extension) to use as a label for the validation
+    validation_label = os.path.basename(__file__).split(".")[0]
 
     # ______________________________________________________________________
     # Check output files are created
@@ -52,16 +58,90 @@ def validate(evaluate=True, threshold=THRESHOLD):
             raise MissingFileMiniPICError(f"File {file} not generated")
 
     # ______________________________________________________________________
+    # Reference database
+
+    references = {
+        "species_initial_scalars": [
+            [0, 262144, 1.499802569489315e-07],
+            [0, 262144, 1.500982120183934e-07],
+        ],
+        "species_final_scalars": [
+            [300, 262144.0, 1.499801677227092e-07],
+            [300, 262144.0, 1.500981415474697e-07],
+        ],
+        "fields_final": [
+            300,
+            8.707252968548583e-16,
+            8.187202771374718e-16,
+            8.133778516563601e-16,
+            1.014322708204903e-15,
+            2.738517219101238e-15,
+            2.932533327560371e-15,
+        ],
+        "gamma_spectrum_sum": [
+            [
+                1.0150306498218023e-05,
+                1.0150305070953287e-05,
+                1.015031026575343e-05,
+                1.0150307734880672e-05,
+                1.0150311192601487e-05,
+                1.015030843474158e-05,
+            ],
+            [
+                1.000157589162598e-05,
+                1.0001575891523015e-05,
+                1.000157589136796e-05,
+                1.000157589118226e-05,
+                1.0001575890954698e-05,
+                1.0001575890766535e-05,
+            ],
+        ],
+        "cloud_initial": [
+            [
+                131076.1602721234,
+                131072.11534091408,
+                131069.52464953822,
+                21014.376991466845,
+                21028.564131718493,
+                21014.480007866434,
+            ],
+            [
+                131076.1602721234,
+                131072.11534091408,
+                131069.52464953822,
+                488.33937456089905,
+                488.375137441201,
+                488.2761036710393,
+            ],
+        ],
+        "cloud_final": [
+            [
+                131059.99739212358,
+                131023.15182992323,
+                131142.13555391456,
+                21014.42145328789,
+                21028.616998630845,
+                21014.458067973428,
+            ],
+            [
+                131100.95742997795,
+                130988.17625004012,
+                131067.20585065625,
+                488.3403714801243,
+                488.3735558866029,
+                488.2763737032677,
+            ],
+        ],
+    }
+
+    # ______________________________________________________________________
     # Check scalars
 
     print(" > Checking scalars")
 
     # Check initial scalar for species
 
-    reference_data = [
-        [0, 262144, 1.499802569489315e-07],
-        [0, 262144, 1.500982120183934e-07],
-    ]
+    reference_data = references["species_initial_scalars"]
 
     for ispecies in range(2):
 
@@ -107,13 +187,15 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Kinetic energy in species_{:02d}.txt is not correct".format(ispecies),
             )
+        else:
+
+            references["species_initial_scalars"][ispecies][0] = iteration
+            references["species_initial_scalars"][ispecies][1] = particles
+            references["species_initial_scalars"][ispecies][2] = energy
 
     # Check final scalar for species
 
-    reference_data = [
-        [300, 262144, 1.49980167722712e-07],
-        [300, 262144, 1.500981415474678e-07],
-    ]
+    reference_data = references["species_final_scalars"]
 
     for ispecies in range(2):
 
@@ -159,18 +241,12 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Kinetic energy in species_{:02d}.txt is not correct".format(ispecies),
             )
+        else:
+            references["species_final_scalars"][ispecies] = [iteration, particles, energy]
 
     # Check final scalar values for fields
 
-    reference_data = [
-        300,
-        8.707252968548611e-16,
-        8.187202771374761e-16,
-        8.133778516563632e-16,
-        1.014322708204923e-15,
-        2.738517219101327e-15,
-        2.932533327560403e-15,
-    ]
+    reference_data = references["fields_final"]
 
     with open("diags/fields.txt", "r") as f:
         lines = f.readlines()
@@ -244,28 +320,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
             "relative",
             "Bz value at it {} in fields.txt is not correct".format(iteration),
         )
+    else:
+        references["fields_final"] = [iteration, Ex, Ey, Ez, Bx, By, Bz]
 
     # ______________________________________________________________________
     # Check gamma spectrums
 
-    reference_sum_data = [
-        [
-            1.0150306498218023e-05,
-            1.0150305070953287e-05,
-            1.015031026575343e-05,
-            1.0150307734880672e-05,
-            1.0150311192601487e-05,
-            1.015030843474158e-05,
-        ],
-        [
-            1.000157589162598e-05,
-            1.0001575891523015e-05,
-            1.000157589136796e-05,
-            1.000157589118226e-05,
-            1.0001575890954698e-05,
-            1.0001575890766535e-05,
-        ],
-    ]
+    reference_sum_data = references["gamma_spectrum_sum"]
 
     print(" > Checking gamma spectrums")
 
@@ -281,7 +342,7 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 minipic_diag.read_1d_diag("diags/" + file)
             )
 
-            new_data.append(np.sum(np.abs(data * x_data)))
+            new_data.append(float(np.sum(np.abs(data * x_data))))
 
         print("    - For species {}: {}".format(ispecies, new_data))
 
@@ -296,28 +357,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
                         ispecies, it
                     ),
                 )
+        else:
+            references["gamma_spectrum_sum"][ispecies] = new_data
 
     # ______________________________________________________________________
     # Check initial cloud file (particle initialization)
 
-    reference_data = [
-        [
-            131076.1602721234,
-            131072.11534091408,
-            131069.52464953822,
-            21014.376991466845,
-            21028.564131718493,
-            21014.480007866434,
-        ],
-        [
-            131076.1602721234,
-            131072.11534091408,
-            131069.52464953822,
-            488.33937456089905,
-            488.375137441201,
-            488.2761036710393,
-        ],
-    ]
+    reference_data = references["cloud_initial"]
 
     print(" > Checking initial cloud file")
 
@@ -387,28 +433,13 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Sum over pz not similar",
             )
+        else:
+            references["cloud_initial"][ispecies] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
 
     # ______________________________________________________________________
     # Check final cloud file (particle initialization)
 
-    reference_data = [
-        [
-            131059.99739212358,
-            131023.15182992323,
-            131142.13555391456,
-            21014.42145328789,
-            21028.616998630845,
-            21014.458067973428,
-        ],
-        [
-            131100.95742997795,
-            130988.17625004012,
-            131067.20585065625,
-            488.3403714801243,
-            488.3735558866029,
-            488.2763737032677,
-        ],
-    ]
+    reference_data = references["cloud_final"]
 
     print(" > Checking final cloud file")
 
@@ -478,3 +509,18 @@ def validate(evaluate=True, threshold=THRESHOLD):
                 "relative",
                 "Sum over pz not similar",
             )
+        else:
+            references["cloud_final"][ispecies] = [x_sum, y_sum, z_sum, px_sum, py_sum, pz_sum]
+
+    # ______________________________________________________________________
+    # Write updated references to JSON file if not evaluating
+
+    if not evaluate:
+        import json
+
+        json_file_name = validation_label + "_references.json"
+
+        with open(json_file_name, "w") as f:
+            json.dump(references, f, indent=4)
+        print(f" > New references written to {json_file_name}")
+
